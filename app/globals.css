@@ -1,26 +1,217 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Mobile optimizations */
+@layer base {
+  html {
+    /* Prevent zoom on input focus for mobile */
+    font-size: 16px;
+  }
+  
+  body {
+    /* Improve touch scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent text size adjust on device rotation */
+    -webkit-text-size-adjust: 100%;
+    /* Prevent font boost on Android */
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Touch-friendly buttons */
+  .btn-touch {
+    @apply px-4 py-3 min-h-[48px] text-base font-medium rounded-lg;
+    @apply active:scale-95 transition-all duration-150;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply btn-touch bg-blue-500 text-white;
+    @apply hover:bg-blue-600 active:bg-blue-700;
+    @apply focus:ring-blue-500;
+  }
+  
+  .btn-success {
+    @apply btn-touch bg-green-500 text-white;
+    @apply hover:bg-green-600 active:bg-green-700;
+    @apply focus:ring-green-500;
+  }
+  
+  .btn-danger {
+    @apply btn-touch bg-red-500 text-white;
+    @apply hover:bg-red-600 active:bg-red-700;
+    @apply focus:ring-red-500;
+  }
+  
+  .btn-warning {
+    @apply btn-touch bg-orange-500 text-white;
+    @apply hover:bg-orange-600 active:bg-orange-700;
+    @apply focus:ring-orange-500;
+  }
+  
+  .btn-secondary {
+    @apply btn-touch bg-gray-500 text-white;
+    @apply hover:bg-gray-600 active:bg-gray-700;
+    @apply focus:ring-gray-500;
+  }
+  
+  /* Touch-friendly form inputs */
+  .input-touch {
+    @apply px-4 py-3 min-h-[48px] text-base rounded-lg border;
+    @apply border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+    @apply focus:outline-none transition-all duration-150;
+  }
+  
+  /* Card components for mobile */
+  .card-mobile {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    @apply p-4 space-y-3;
+  }
+  
+  /* Status indicators */
+  .status-active {
+    @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-inactive {
+    @apply bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-captured {
+    @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-safe {
+    @apply bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium;
+  }
+}
+
+@layer utilities {
+  /* Prevent text selection on UI elements */
+  .select-none-important {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+  }
+  
+  /* Safe area for mobile devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* Full viewport height for mobile */
+  .h-screen-mobile {
+    height: 100vh;
+    /* Fallback for older browsers */
+    height: 100dvh;
+    /* Dynamic viewport height */
+  }
+  
+  /* Smooth scrolling */
+  .scroll-smooth-mobile {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Haptic feedback simulation */
+  .haptic-light {
+    @apply active:bg-opacity-80 transition-all duration-75;
+  }
+  
+  .haptic-medium {
+    @apply active:scale-95 active:bg-opacity-90 transition-all duration-100;
+  }
+  
+  .haptic-heavy {
+    @apply active:scale-90 active:bg-opacity-95 transition-all duration-150;
+  }
+}
+
+/* Leaflet map mobile optimizations */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-control-zoom {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.leaflet-control-zoom a {
+  width: 48px !important;
+  height: 48px !important;
+  line-height: 46px !important;
+  font-size: 24px !important;
+  border-radius: 8px !important;
+}
+
+/* Custom marker styles for better mobile visibility */
+.custom-marker {
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+}
+
+.custom-marker.runner {
+  background-color: #3B82F6;
+}
+
+.custom-marker.chaser {
+  background-color: #EF4444;
+}
+
+.custom-marker.gamemaster {
+  background-color: #10B981;
+}
+
+/* PWA specific styles */
+@media (display-mode: standalone) {
+  body {
+    /* Remove any default margins/padding in PWA mode */
+    margin: 0;
+    padding: 0;
+    /* Prevent overscroll bounce */
+    overscroll-behavior: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-touch {
+    @apply border-2 border-current;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .btn-touch,
+  .haptic-light,
+  .haptic-medium,
+  .haptic-heavy {
+    @apply transition-none;
+  }
+  
+  .active\:scale-95 {
+    transform: none !important;
+  }
+  
+  .active\:scale-90 {
+    transform: none !important;
+  }
 }

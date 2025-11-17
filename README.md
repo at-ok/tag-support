@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tag Support - リアル鬼ごっこサポートアプリ
 
-## Getting Started
+大学生グループ向けの大規模リアル鬼ごっこイベントを支援するPWA（Progressive Web App）です。
 
-First, run the development server:
+## 機能概要
+
+### 🏃‍♂️ プレイヤー向け機能
+- **逃走者（Runner）**: チームメイト位置の表示、ミッション表示
+- **鬼（Chaser）**: 近距離レーダー、捕獲機能
+
+### 🎮 運営向け機能
+- **ゲームマスター**: 全プレイヤー位置管理、ステータス変更、リアルタイム監視
+
+### 🗺️ 位置情報機能
+- リアルタイム位置追跡
+- Leaflet.jsによる地図表示
+- 調整可能な位置精度・更新間隔
+
+## 技術スタック
+
+- **フロントエンド**: Next.js 15 + React + TypeScript + Tailwind CSS
+- **バックエンド**: Firebase (Auth/Firestore/Functions/FCM)
+- **地図**: Leaflet.js + OpenStreetMap
+- **PWA**: Service Worker + Web App Manifest
+
+## 開発環境セットアップ
+
+### 前提条件
+- Node.js 18以上
+- npm または yarn
+
+### インストール
 
 ```bash
+# リポジトリをクローン
+git clone <repository-url>
+cd tag-support
+
+# 依存関係のインストール
+npm install
+
+# 環境変数の設定
+cp .env.local.example .env.local
+# .env.localにFirebaseの設定を記入
+
+# 開発サーバーの起動
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Firebase設定
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. [Firebase Console](https://console.firebase.google.com/)でプロジェクトを作成
+2. Authentication、Firestore Database、Cloud Messaging、Functions を有効化
+3. `.env.local`に設定値を記入
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
 
-## Learn More
+## ディレクトリ構成
 
-To learn more about Next.js, take a look at the following resources:
+```
+tag-support/
+├── app/                    # Next.js App Router
+│   ├── runner/            # 逃走者UI
+│   ├── chaser/            # 鬼UI
+│   └── gamemaster/        # ゲームマスターUI
+├── components/            # 共通コンポーネント
+│   └── Map.tsx           # 地図コンポーネント
+├── hooks/                # カスタムフック
+│   ├── useAuth.ts        # 認証フック
+│   └── useLocation.ts    # 位置情報フック
+├── lib/                  # ライブラリ設定
+│   └── firebase.ts       # Firebase初期化
+├── types/                # TypeScript型定義
+│   └── index.ts          # メイン型定義
+└── public/               # 静的ファイル
+    ├── manifest.json     # PWAマニフェスト
+    └── sw.js            # Service Worker
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 使用方法
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. プレイヤー登録
+1. アプリにアクセス
+2. ニックネーム・役職・チームを選択
+3. 位置情報のアクセス許可
 
-## Deploy on Vercel
+### 2. 各役職での操作
+- **逃走者**: チームメイト位置確認、ミッション進行
+- **鬼**: 近くの逃走者を捕獲
+- **ゲームマスター**: 全体管理、プレイヤーステータス変更
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 実装済み機能
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+✅ Next.js + TypeScript + PWA基盤  
+✅ Firebase認証・Firestore連携  
+✅ 位置情報トラッキング  
+✅ Leaflet.js地図表示  
+✅ 役職別UI（逃走者・鬼・ゲームマスター）  
+✅ PWA設定・オフライン対応基礎  
+
+## 今後の実装予定
+
+- [ ] Push通知機能
+- [ ] ミッションシステム
+- [ ] セーフゾーン・立禁エリア
+- [ ] ゲーム状態管理
+- [ ] リプレイ機能
+
+## 開発コマンド
+
+```bash
+# 開発サーバー起動
+npm run dev
+
+# ビルド
+npm run build
+
+# 本番環境確認
+npm run start
+
+# 型チェック
+npm run type-check
+```
+
+## ライセンス
+
+MIT License
