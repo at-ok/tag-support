@@ -5,9 +5,9 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from '@/hooks/useLocation';
 import { useGame } from '@/hooks/useGame';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { User, Mission } from '@/types';
+import { supabase } from '@/lib/supabase';
+import type { User, Mission } from '@/types';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import MissionManager from '@/components/MissionManager';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
@@ -20,22 +20,56 @@ export default function RunnerPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
 
   useEffect(() => {
-    if (!user || user.role !== 'runner') return;
+    if (!user || user.role !== 'runner' || !user.team) return;
 
-    const q = query(
-      collection(db, 'users'),
-      where('team', '==', user.team),
-      where('role', '==', 'runner')
-    );
+    let channel: RealtimeChannel;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const users = snapshot.docs
-        .map(doc => ({ ...doc.data(), id: doc.id } as User))
-        .filter(u => u.id !== user.id);
-      setTeammates(users);
-    });
+    const fetchTeammates = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('team_id', user.team)
+        .eq('role', 'runner')
+        .neq('id', user.id);
 
-    return () => unsubscribe();
+      if (error) {
+        console.error('Error fetching teammates:', error);
+        return;
+      }
+
+      if (data) {
+        const mappedUsers: User[] = data.map(u => ({
+          id: u.id,
+          nickname: u.nickname,
+          role: u.role as any,
+          team: u.team_id || undefined,
+          status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
+          lastUpdated: new Date(u.updated_at),
+        }));
+        setTeammates(mappedUsers);
+      }
+    };
+
+    fetchTeammates();
+
+    // Subscribe to real-time updates
+    channel = supabase
+      .channel('teammates_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'users',
+        filter: `team_id=eq.${user.team}`,
+      }, () => {
+        fetchTeammates();
+      })
+      .subscribe();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [user]);
 
   useEffect(() => {

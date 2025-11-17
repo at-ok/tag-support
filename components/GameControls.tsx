@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useGame } from '@/hooks/useGame';
-import { GameSettings } from '@/types';
+import type { GameSettings } from '@/types';
 
 interface GameControlsProps {
   isGameMaster: boolean;

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMissions } from '@/hooks/useMissions';
 import { useAuth } from '@/hooks/useAuth';
-import { Mission, Location } from '@/types';
+import type { Mission, Location } from '@/types';
 
 interface MissionManagerProps {
   isGameMaster: boolean;
