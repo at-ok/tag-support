@@ -60,13 +60,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (data) {
+        const row = data as any;
         setUser({
-          id: data.id,
-          nickname: data.nickname,
-          role: data.role as UserRole,
-          team: data.team_id || undefined,
-          status: data.status === 'captured' ? 'captured' : data.status === 'offline' ? 'safe' : 'active',
-          lastUpdated: new Date(data.updated_at),
+          id: row.id,
+          nickname: row.nickname,
+          role: row.role as UserRole,
+          team: row.team_id || undefined,
+          status: row.status === 'captured' ? 'captured' : row.status === 'offline' ? 'safe' : 'active',
+          lastUpdated: new Date(row.updated_at),
           captureCount: 0,
         });
       }
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role === 'special' ? 'gamemaster' : role,
           team_id: team || null,
           status: 'active',
-        });
+        } as any);
 
       if (insertError) throw insertError;
 

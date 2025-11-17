@@ -36,7 +36,7 @@ export default function ChaserPage() {
       }
 
       if (data) {
-        const mappedRunners: User[] = data.map(u => ({
+        const mappedRunners: User[] = data.map((u: any) => ({
           id: u.id,
           nickname: u.nickname,
           role: u.role as any,
@@ -108,7 +108,7 @@ export default function ChaserPage() {
       // Update runner status to captured
       const { error: runnerError } = await supabase
         .from('users')
-        .update({ status: 'captured' })
+        .update({ status: 'captured' } as any)
         .eq('id', runnerId);
 
       if (runnerError) throw runnerError;

@@ -36,7 +36,7 @@ export default function GamemasterPage() {
       }
 
       if (data) {
-        const mappedPlayers: User[] = data.map(u => ({
+        const mappedPlayers: User[] = data.map((u: any) => ({
           id: u.id,
           nickname: u.nickname,
           role: u.role as any,
@@ -77,7 +77,7 @@ export default function GamemasterPage() {
         .update({
           status: newStatus === 'captured' ? 'captured' : newStatus === 'offline' ? 'offline' : 'active',
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', playerId);
 
       if (error) throw error;
@@ -98,7 +98,7 @@ export default function GamemasterPage() {
 
       const { error } = await supabase
         .from('users')
-        .update(updates)
+        .update(updates as any)
         .eq('id', playerId);
 
       if (error) throw error;

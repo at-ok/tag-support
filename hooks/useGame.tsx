@@ -46,12 +46,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         if (error && error.code !== 'PGRST116') throw error; // Ignore "no rows" error
 
         if (data) {
+          const row = data as any;
           setGame({
-            id: data.id,
-            status: data.status as GameStatus,
-            startTime: data.start_time ? new Date(data.start_time) : undefined,
-            endTime: data.end_time ? new Date(data.end_time) : undefined,
-            duration: data.duration_minutes,
+            id: row.id,
+            status: row.status as GameStatus,
+            startTime: row.start_time ? new Date(row.start_time) : undefined,
+            endTime: row.end_time ? new Date(row.end_time) : undefined,
+            duration: row.duration_minutes,
             settings: {
               locationUpdateInterval: 5000,
               locationAccuracy: 10,
@@ -121,7 +122,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         .insert({
           status: 'waiting',
           duration_minutes: duration,
-        });
+        } as any);
 
       if (error) throw error;
     } catch (err) {
@@ -142,7 +143,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         .update({
           status: 'active',
           start_time: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', game.id);
 
       if (error) throw error;
@@ -161,7 +162,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const { error } = await supabase
         .from('game_state')
-        .update({ status: 'paused' })
+        .update({ status: 'paused' } as any)
         .eq('id', game.id);
 
       if (error) throw error;
@@ -183,7 +184,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         .update({
           status: 'finished',
           end_time: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', game.id);
 
       if (error) throw error;

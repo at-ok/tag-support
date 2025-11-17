@@ -38,7 +38,7 @@ export default function RunnerPage() {
       }
 
       if (data) {
-        const mappedUsers: User[] = data.map(u => ({
+        const mappedUsers: User[] = data.map((u: any) => ({
           id: u.id,
           nickname: u.nickname,
           role: u.role as any,
