@@ -109,12 +109,15 @@ describe('useLocation', () => {
       timestamp: Date.now(),
     };
 
-    await act(async () => {
+    // Call the position callback synchronously
+    act(() => {
       positionCallback(mockPosition);
-      await waitFor(() => {
-        expect(result.current.location).not.toBeNull();
-      });
     });
+
+    // Wait for state update
+    await waitFor(() => {
+      expect(result.current.location).not.toBeNull();
+    }, { timeout: 3000 });
 
     expect(result.current.location).toMatchObject({
       lat: 35.6812,
@@ -145,12 +148,15 @@ describe('useLocation', () => {
       TIMEOUT: 3,
     };
 
-    await act(async () => {
+    // Call the error callback synchronously
+    act(() => {
       errorCallback(mockError);
-      await waitFor(() => {
-        expect(result.current.error).not.toBeNull();
-      });
     });
+
+    // Wait for state update
+    await waitFor(() => {
+      expect(result.current.error).not.toBeNull();
+    }, { timeout: 3000 });
 
     expect(result.current.error).toBe('User denied geolocation');
     expect(result.current.isTracking).toBe(false);
