@@ -18,10 +18,12 @@
 
 ## 技術スタック
 
-- **フロントエンド**: Next.js 15 + React + TypeScript + Tailwind CSS
-- **バックエンド**: Firebase (Auth/Firestore/Functions/FCM)
+- **フロントエンド**: Next.js 15 + React 19 + TypeScript + Tailwind CSS
+- **バックエンド**: Supabase (PostgreSQL + PostGIS + Realtime + Auth)
 - **地図**: Leaflet.js + OpenStreetMap
-- **PWA**: Service Worker + Web App Manifest
+- **PWA**: next-pwa + Service Worker
+- **テスト**: Vitest + Playwright
+- **CI/CD**: GitHub Actions + Vercel
 
 ## 開発環境セットアップ
 
@@ -47,19 +49,16 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-### Firebase設定
+### Supabase設定
 
-1. [Firebase Console](https://console.firebase.google.com/)でプロジェクトを作成
-2. Authentication、Firestore Database、Cloud Messaging、Functions を有効化
-3. `.env.local`に設定値を記入
+1. [Supabase](https://app.supabase.com/)でプロジェクトを作成
+2. SQL Editor で `supabase/migrations/20250101000000_initial_schema.sql` を実行
+3. Settings > API でプロジェクトURLとAnon Keyを取得
+4. `.env.local`に設定値を記入
 
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ## ディレクトリ構成
@@ -76,7 +75,7 @@ tag-support/
 │   ├── useAuth.ts        # 認証フック
 │   └── useLocation.ts    # 位置情報フック
 ├── lib/                  # ライブラリ設定
-│   └── firebase.ts       # Firebase初期化
+│   └── supabase.ts       # Supabase初期化
 ├── types/                # TypeScript型定義
 │   └── index.ts          # メイン型定義
 └── public/               # 静的ファイル
@@ -98,12 +97,14 @@ tag-support/
 
 ## 実装済み機能
 
-✅ Next.js + TypeScript + PWA基盤  
-✅ Firebase認証・Firestore連携  
-✅ 位置情報トラッキング  
-✅ Leaflet.js地図表示  
-✅ 役職別UI（逃走者・鬼・ゲームマスター）  
-✅ PWA設定・オフライン対応基礎  
+✅ Next.js + TypeScript + PWA基盤
+✅ Supabase (PostgreSQL + PostGIS) 連携
+✅ 位置情報トラッキング
+✅ Leaflet.js地図表示
+✅ 役職別UI（逃走者・鬼・ゲームマスター）
+✅ PWA設定・オフライン対応基礎
+✅ CI/CD (GitHub Actions)
+✅ テスト環境 (Vitest + Playwright)  
 
 ## 今後の実装予定
 
@@ -127,6 +128,17 @@ npm run start
 
 # 型チェック
 npm run type-check
+
+# テスト
+npm run test              # ユニットテスト (Vitest)
+npm run test:ui           # ユニットテスト UI
+npm run test:e2e          # E2Eテスト (Playwright)
+npm run test:e2e:ui       # E2Eテスト UI
+
+# コード品質
+npm run lint              # ESLint
+npm run format            # Prettier フォーマット
+npm run format:check      # フォーマットチェック
 ```
 
 ## ライセンス
