@@ -77,7 +77,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: null,
       error: null,
-      accuracy: 0,
       isTracking: false,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -353,7 +352,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -408,7 +406,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -461,7 +458,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -545,9 +541,9 @@ describe('useMissions', () => {
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
       expect(result.current.missions).toHaveLength(3);
-      expect(result.current.missions[0].type).toBe('area');
-      expect(result.current.missions[1].type).toBe('escape');
-      expect(result.current.missions[2].type).toBe('rescue');
+      expect(result.current.missions[0]!.type).toBe('area');
+      expect(result.current.missions[1]!.type).toBe('escape');
+      expect(result.current.missions[2]!.type).toBe('rescue');
     });
   });
 });

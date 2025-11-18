@@ -34,7 +34,7 @@ describe('useLocation', () => {
     // Mock useAuth hook
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 'test-user-id', nickname: 'Test User', role: 'runner', status: 'active', lastUpdated: new Date() },
-      firebaseUser: null,
+      session: null,
       loading: false,
       error: null,
       signIn: vi.fn(),
@@ -55,7 +55,6 @@ describe('useLocation', () => {
   });
 
   it('should set error when geolocation is not supported', () => {
-    // @ts-expect-error - intentionally setting to undefined
     Object.defineProperty(global.navigator, 'geolocation', {
       writable: true,
       value: undefined,
@@ -105,8 +104,10 @@ describe('useLocation', () => {
         altitudeAccuracy: null,
         heading: null,
         speed: null,
+        toJSON: () => ({}),
       },
       timestamp: Date.now(),
+      toJSON: () => ({}),
     };
 
     // Call the position callback synchronously

@@ -78,7 +78,7 @@ export default function ChaserPage() {
         supabase.removeChannel(channel);
       }
     };
-  }, [user, location]);
+  }, [user, location, game?.settings.chaserRadarRange]);
 
   useEffect(() => {
     if (!isTracking) {

@@ -6,8 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from '@/hooks/useLocation';
 import { useGame } from '@/hooks/useGame';
 import { supabase } from '@/lib/supabase';
-import type { User, Mission } from '@/types';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { User } from '@/types';
 import MissionManager from '@/components/MissionManager';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
@@ -17,12 +16,9 @@ export default function RunnerPage() {
   const { location, isTracking, startTracking } = useLocation();
   const { game } = useGame();
   const [teammates, setTeammates] = useState<User[]>([]);
-  const [missions, setMissions] = useState<Mission[]>([]);
 
   useEffect(() => {
     if (!user || user.role !== 'runner' || !user.team) return;
-
-    let channel: RealtimeChannel;
 
     const fetchTeammates = async () => {
       if (!user.team) {
@@ -43,10 +39,10 @@ export default function RunnerPage() {
       }
 
       if (data) {
-        const mappedUsers: User[] = data.map((u: any) => ({
+        const mappedUsers: User[] = data.map((u: { id: string; nickname: string; role: string; team_id: string | null; status: string; updated_at: string }) => ({
           id: u.id,
           nickname: u.nickname,
-          role: u.role as any,
+          role: u.role as 'runner' | 'chaser' | 'gamemaster',
           team: u.team_id || undefined,
           status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
           lastUpdated: new Date(u.updated_at),
@@ -58,7 +54,7 @@ export default function RunnerPage() {
     fetchTeammates();
 
     // Subscribe to real-time updates
-    channel = supabase
+    const channel = supabase
       .channel('teammates_changes')
       .on('postgres_changes', {
         event: '*',

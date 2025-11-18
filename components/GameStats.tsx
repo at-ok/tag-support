@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocationHistory, type PlayerStats } from '@/hooks/useLocationHistory';
+import type { PlayerStats } from '@/hooks/useLocationHistory';
 import { supabase } from '@/lib/supabase';
 
 interface PlayerStatsData {
@@ -15,6 +15,21 @@ interface PlayerStatsData {
 interface GameStatsProps {
   gameId?: string;
   isGameMaster?: boolean;
+}
+
+interface UserRecord {
+  id: string;
+  nickname: string;
+  role: string;
+  team?: string;
+}
+
+interface LocationHistoryRecord {
+  user_id: string;
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+  speed?: number;
 }
 
 export default function GameStats({ gameId, isGameMaster = false }: GameStatsProps) {
@@ -37,7 +52,7 @@ export default function GameStats({ gameId, isGameMaster = false }: GameStatsPro
         if (usersError) throw usersError;
 
         if (users) {
-          const statsPromises = users.map(async (user: any) => {
+          const statsPromises = users.map(async (user: UserRecord) => {
             // Fetch location history for each user
             const { data: historyData, error: historyError } = await supabase
               .from('location_history')
@@ -74,8 +89,8 @@ export default function GameStats({ gameId, isGameMaster = false }: GameStatsPro
             const speeds: number[] = [];
 
             for (let i = 1; i < historyData.length; i++) {
-              const prev = historyData[i - 1] as any;
-              const curr = historyData[i] as any;
+              const prev = historyData[i - 1] as unknown as LocationHistoryRecord;
+              const curr = historyData[i] as unknown as LocationHistoryRecord;
 
               if (!prev || !curr) continue;
 
@@ -91,8 +106,8 @@ export default function GameStats({ gameId, isGameMaster = false }: GameStatsPro
               }
             }
 
-            const lastEntry = historyData[historyData.length - 1] as any;
-            const firstEntry = historyData[0] as any;
+            const lastEntry = historyData[historyData.length - 1] as unknown as LocationHistoryRecord;
+            const firstEntry = historyData[0] as unknown as LocationHistoryRecord;
 
             if (!lastEntry || !firstEntry) {
               return {

@@ -64,18 +64,17 @@ describe('useZones', () => {
     // Mock useAuth
     vi.mocked(useAuth).mockReturnValue({
       user: mockRunner,
+      session: null,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     // Mock useLocation
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -165,8 +164,8 @@ describe('useZones', () => {
 
     expect(result.current.safeZones).toHaveLength(1);
     expect(result.current.restrictedZones).toHaveLength(1);
-    expect(result.current.safeZones[0].id).toBe(mockSafeZone.id);
-    expect(result.current.restrictedZones[0].id).toBe(mockRestrictedZone.id);
+    expect(result.current.safeZones[0]!.id).toBe(mockSafeZone.id);
+    expect(result.current.restrictedZones[0]!.id).toBe(mockRestrictedZone.id);
   });
 
   it('should create a zone as gamemaster', async () => {
@@ -174,9 +173,9 @@ describe('useZones', () => {
       user: mockGameMaster,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      session: null,
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     const mockSelect = vi.fn().mockReturnThis();
@@ -265,9 +264,9 @@ describe('useZones', () => {
       user: mockGameMaster,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      session: null,
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     const mockSelect = vi.fn().mockReturnThis();
@@ -458,7 +457,7 @@ describe('useZones', () => {
       expect(result.current.safeZones).toHaveLength(1);
     });
 
-    expect(result.current.safeZones[0].id).toBe('zone-3');
+    expect(result.current.safeZones[0]!.id).toBe('zone-3');
   });
 
   it('should throw error when used outside ZoneProvider', () => {

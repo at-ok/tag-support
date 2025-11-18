@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useZones } from '@/hooks/useZones';
 import { useLocation } from '@/hooks/useLocation';
-import type { Zone, Location } from '@/types';
+import type { Location } from '@/types';
 
 interface ZoneManagerProps {
   isGameMaster: boolean;

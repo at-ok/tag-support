@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useLocationHistory, type LocationHistoryEntry } from '@/hooks/useLocationHistory';
+import { useLocationHistory } from '@/hooks/useLocationHistory';
 
 interface ReplayViewerProps {
   userId: string;
