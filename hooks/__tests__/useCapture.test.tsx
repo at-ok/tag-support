@@ -150,6 +150,8 @@ describe('useCapture', () => {
     const mockSelect = vi.fn().mockReturnThis();
     const mockEq = vi.fn().mockResolvedValue({ data: [], error: null });
     const mockInsert = vi.fn().mockResolvedValue({ error: null });
+    const mockUpdate = vi.fn().mockReturnThis();
+    const mockUpdateEq = vi.fn().mockResolvedValue({ error: null });
 
     vi.mocked(supabase.from).mockImplementation((table) => {
       if (table === 'captures') {
@@ -157,6 +159,13 @@ describe('useCapture', () => {
           select: mockSelect,
           eq: mockEq,
           insert: mockInsert,
+        } as any;
+      }
+      if (table === 'users') {
+        return {
+          update: () => ({
+            eq: mockUpdateEq,
+          }),
         } as any;
       }
       return {
@@ -193,6 +202,7 @@ describe('useCapture', () => {
         longitude: mockLocation.lng,
       })
     );
+    expect(mockUpdateEq).toHaveBeenCalledWith('id', 'runner-1');
   });
 
   it('should throw error if non-chaser tries to record capture', async () => {
@@ -291,13 +301,22 @@ describe('useCapture', () => {
       error: null,
     });
 
+    const mockUsersChain = {
+      select: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+    };
+    // Setup the final eq call in the chain to resolve with data
+    mockUsersChain.eq = vi.fn((column) => {
+      if (column === 'status') {
+        return Promise.resolve({ data: [nearbyRunner], error: null });
+      }
+      return mockUsersChain;
+    });
+
     vi.mocked(supabase.from).mockImplementation((table) => {
       if (table === 'users') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          in: vi.fn().mockResolvedValue({ data: [nearbyRunner], error: null }),
-        } as any;
+        return mockUsersChain as any;
       }
       return {
         select: mockSelect,
