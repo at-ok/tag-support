@@ -64,7 +64,7 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
 
         if (data) {
-          const mappedMissions: Mission[] = data.map(m => ({
+          const mappedMissions: Mission[] = (data as any[]).map((m: any) => ({
             id: m.id,
             title: m.title,
             description: m.description,
@@ -129,19 +129,21 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
 
-      const { error } = await supabase
+      const insertPayload: Record<string, unknown> = {
+        title,
+        description,
+        type: mapMissionTypeToDb(type),
+        target_latitude: targetLocation?.lat || null,
+        target_longitude: targetLocation?.lng || null,
+        radius_meters: radius || null,
+        duration_seconds: duration || null,
+        points: 100,
+        status: 'active',
+      };
+
+      const { error } = await (supabase
         .from('missions')
-        .insert({
-          title,
-          description,
-          type: mapMissionTypeToDb(type),
-          target_latitude: targetLocation?.lat || null,
-          target_longitude: targetLocation?.lng || null,
-          radius_meters: radius || null,
-          duration_seconds: duration || null,
-          points: 100,
-          status: 'active',
-        });
+        .insert(insertPayload as never));
 
       if (error) throw error;
     } catch (err) {
@@ -174,10 +176,11 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const { error } = await supabase
+      const updatePayload: Record<string, unknown> = { status: 'completed' };
+      const { error } = await (supabase
         .from('missions')
-        .update({ status: 'completed' })
-        .eq('id', missionId);
+        .update(updatePayload as never)
+        .eq('id', missionId));
 
       if (error) throw error;
     } catch (err) {

@@ -25,6 +25,11 @@ export default function RunnerPage() {
     let channel: RealtimeChannel;
 
     const fetchTeammates = async () => {
+      if (!user.team) {
+        setTeammates([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -127,7 +132,7 @@ export default function RunnerPage() {
       <div className="flex-1 relative">
         <Map
           center={mapCenter}
-          currentUser={{ ...user, location }}
+          currentUser={{ ...user, location: location || undefined }}
           visibleUsers={teammates}
         />
       </div>

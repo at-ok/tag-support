@@ -22,7 +22,7 @@ export default function GamemasterPage() {
   useEffect(() => {
     if (!user || user.role !== 'gamemaster') return;
 
-    let channel: RealtimeChannel;
+    let channel: RealtimeChannel | null = null;
 
     const fetchPlayers = async () => {
       const { data, error } = await supabase
@@ -37,13 +37,13 @@ export default function GamemasterPage() {
       }
 
       if (data) {
-        const mappedPlayers: User[] = data.map((u: any) => ({
-          id: u.id,
-          nickname: u.nickname,
-          role: u.role as any,
-          team: u.team_id || undefined,
+        const mappedPlayers: User[] = data.map((u: Record<string, unknown>) => ({
+          id: u.id as string,
+          nickname: u.nickname as string,
+          role: u.role as 'runner' | 'chaser' | 'gamemaster' | 'special',
+          team: (u.team_id as string | null) || undefined,
           status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
-          lastUpdated: new Date(u.updated_at),
+          lastUpdated: new Date(u.updated_at as string),
           captureCount: 0,
         }));
         setAllPlayers(mappedPlayers);
@@ -73,13 +73,14 @@ export default function GamemasterPage() {
 
   const updatePlayerStatus = async (playerId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
+      const updatePayload: Record<string, unknown> = {
+        status: newStatus === 'captured' ? 'captured' : newStatus === 'offline' ? 'offline' : 'active',
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await (supabase
         .from('users')
-        .update({
-          status: newStatus === 'captured' ? 'captured' : newStatus === 'offline' ? 'offline' : 'active',
-          updated_at: new Date().toISOString()
-        } as any)
-        .eq('id', playerId);
+        .update(updatePayload as never)
+        .eq('id', playerId));
 
       if (error) throw error;
     } catch (error) {
@@ -89,7 +90,7 @@ export default function GamemasterPage() {
 
   const reassignPlayer = async (playerId: string, newRole: string, newTeam?: string) => {
     try {
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         role: newRole,
         updated_at: new Date().toISOString()
       };
@@ -97,10 +98,10 @@ export default function GamemasterPage() {
         updates.team_id = newTeam;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('users')
-        .update(updates as any)
-        .eq('id', playerId);
+        .update(updates as never)
+        .eq('id', playerId));
 
       if (error) throw error;
     } catch (error) {

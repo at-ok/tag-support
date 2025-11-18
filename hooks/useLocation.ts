@@ -25,23 +25,26 @@ export function useLocation(updateInterval: number = 30000): UseLocationReturn {
 
     try {
       // Insert new location record
-      const { error: insertError } = await supabase
+      const insertPayload: Record<string, unknown> = {
+        user_id: user.id,
+        latitude: loc.lat,
+        longitude: loc.lng,
+        accuracy: loc.accuracy || null,
+        timestamp: loc.timestamp.toISOString(),
+      };
+
+      const { error: insertError } = await (supabase
         .from('player_locations')
-        .insert({
-          user_id: user.id,
-          latitude: loc.lat,
-          longitude: loc.lng,
-          accuracy: loc.accuracy || null,
-          timestamp: loc.timestamp.toISOString(),
-        });
+        .insert(insertPayload as never));
 
       if (insertError) throw insertError;
 
       // Update user's last updated time
-      const { error: updateError } = await supabase
+      const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      const { error: updateError } = await (supabase
         .from('users')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', user.id);
+        .update(updatePayload as never)
+        .eq('id', user.id));
 
       if (updateError) throw updateError;
     } catch (err) {

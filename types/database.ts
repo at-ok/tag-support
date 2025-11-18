@@ -7,27 +7,27 @@ export interface Database {
         Row: {
           id: string;
           nickname: string;
-          role: 'runner' | 'chaser' | 'gamemaster';
+          role: 'runner' | 'chaser' | 'gamemaster' | 'special';
           team_id: string | null;
-          status: 'active' | 'captured' | 'offline';
+          status: 'active' | 'captured' | 'offline' | 'rescued' | 'safe';
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           nickname: string;
-          role: 'runner' | 'chaser' | 'gamemaster';
+          role: 'runner' | 'chaser' | 'gamemaster' | 'special';
           team_id?: string | null;
-          status?: 'active' | 'captured' | 'offline';
+          status?: 'active' | 'captured' | 'offline' | 'rescued' | 'safe';
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           nickname?: string;
-          role?: 'runner' | 'chaser' | 'gamemaster';
+          role?: 'runner' | 'chaser' | 'gamemaster' | 'special';
           team_id?: string | null;
-          status?: 'active' | 'captured' | 'offline';
+          status?: 'active' | 'captured' | 'offline' | 'rescued' | 'safe';
           created_at?: string;
           updated_at?: string;
         };
@@ -130,6 +130,73 @@ export interface Database {
           start_time?: string | null;
           end_time?: string | null;
           duration_minutes?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      captures: {
+        Row: {
+          id: string;
+          chaser_id: string;
+          runner_id: string;
+          latitude: number;
+          longitude: number;
+          capture_time: string;
+          verified: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          chaser_id: string;
+          runner_id: string;
+          latitude: number;
+          longitude: number;
+          capture_time?: string;
+          verified?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          chaser_id?: string;
+          runner_id?: string;
+          latitude?: number;
+          longitude?: number;
+          capture_time?: string;
+          verified?: boolean;
+          created_at?: string;
+        };
+      };
+      zones: {
+        Row: {
+          id: string;
+          name: string;
+          type: 'safe' | 'restricted';
+          center_lat: number;
+          center_lng: number;
+          radius_meters: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          type: 'safe' | 'restricted';
+          center_lat: number;
+          center_lng: number;
+          radius_meters: number;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          type?: 'safe' | 'restricted';
+          center_lat?: number;
+          center_lng?: number;
+          radius_meters?: number;
+          active?: boolean;
           created_at?: string;
           updated_at?: string;
         };

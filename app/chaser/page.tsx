@@ -21,7 +21,7 @@ export default function ChaserPage() {
   useEffect(() => {
     if (!user || user.role !== 'chaser') return;
 
-    let channel: RealtimeChannel;
+    let channel: RealtimeChannel | null = null;
 
     const fetchRunners = async () => {
       const { data, error } = await supabase
@@ -36,13 +36,13 @@ export default function ChaserPage() {
       }
 
       if (data) {
-        const mappedRunners: User[] = data.map((u: any) => ({
-          id: u.id,
-          nickname: u.nickname,
-          role: u.role as any,
-          team: u.team_id || undefined,
+        const mappedRunners: User[] = data.map((u: Record<string, unknown>) => ({
+          id: u.id as string,
+          nickname: u.nickname as string,
+          role: u.role as 'runner' | 'chaser' | 'gamemaster' | 'special',
+          team: (u.team_id as string | null) || undefined,
           status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
-          lastUpdated: new Date(u.updated_at),
+          lastUpdated: new Date(u.updated_at as string),
         }));
         setAllRunners(mappedRunners);
 
@@ -106,14 +106,15 @@ export default function ChaserPage() {
 
     try {
       // Update runner status to captured
-      const { error: runnerError } = await supabase
+      const updatePayload: Record<string, unknown> = { status: 'captured' };
+      const { error: runnerError } = await (supabase
         .from('users')
-        .update({ status: 'captured' } as any)
-        .eq('id', runnerId);
+        .update(updatePayload as never)
+        .eq('id', runnerId));
 
       if (runnerError) throw runnerError;
 
-      console.log('Runner captured successfully');
+      // Runner captured successfully
     } catch (error) {
       console.error('Failed to capture runner:', error);
     }
@@ -163,7 +164,7 @@ export default function ChaserPage() {
       <div className="flex-1 relative">
         <Map
           center={mapCenter}
-          currentUser={{ ...user, location }}
+          currentUser={{ ...user, location: location || undefined }}
           visibleUsers={nearbyRunners}
         />
       </div>

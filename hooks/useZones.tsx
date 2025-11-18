@@ -48,13 +48,13 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
 
         if (data) {
-          const mappedZones: Zone[] = data.map(z => ({
+          const mappedZones: Zone[] = (data as any[]).map((z: any) => ({
             id: z.id,
             name: z.name,
             type: z.type as 'safe' | 'restricted',
             center: {
-              lat: z.center_latitude,
-              lng: z.center_longitude,
+              lat: z.center_lat,
+              lng: z.center_lng,
               timestamp: new Date(),
             },
             radius: z.radius_meters,
@@ -142,16 +142,18 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
 
-      const { error } = await supabase
+      const insertPayload: Record<string, unknown> = {
+        name,
+        type,
+        center_lat: center.lat,
+        center_lng: center.lng,
+        radius_meters: radius,
+        active: true,
+      };
+
+      const { error } = await (supabase
         .from('zones')
-        .insert({
-          name,
-          type,
-          center_latitude: center.lat,
-          center_longitude: center.lng,
-          radius_meters: radius,
-          active: true,
-        });
+        .insert(insertPayload as never));
 
       if (error) throw error;
     } catch (err) {
@@ -168,19 +170,19 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
 
-      const dbUpdates: any = {};
+      const dbUpdates: Record<string, unknown> = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.type !== undefined) dbUpdates.type = updates.type;
       if (updates.radius !== undefined) dbUpdates.radius_meters = updates.radius;
       if (updates.center !== undefined) {
-        dbUpdates.center_latitude = updates.center.lat;
-        dbUpdates.center_longitude = updates.center.lng;
+        dbUpdates.center_lat = updates.center.lat;
+        dbUpdates.center_lng = updates.center.lng;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('zones')
-        .update(dbUpdates)
-        .eq('id', zoneId);
+        .update(dbUpdates as never)
+        .eq('id', zoneId));
 
       if (error) throw error;
     } catch (err) {
@@ -211,15 +213,16 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
   const isInSafeZone = async (location: Location): Promise<boolean> => {
     try {
       setError(null);
-      const { data, error } = await supabase.rpc('is_in_zone', {
+      const { data, error } = await supabase.rpc('is_in_zone' as any, {
         player_lat: location.lat,
         player_lng: location.lng,
         zone_type: 'safe',
-      });
+      } as any);
 
       if (error) throw error;
 
-      return data && data.length > 0;
+      const typedData = data as any[] | null;
+      return !!(typedData && typedData.length > 0);
     } catch (err) {
       console.error('Error checking safe zone:', err);
       setError(err instanceof Error ? err.message : 'Failed to check safe zone');
@@ -230,15 +233,16 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
   const isInRestrictedZone = async (location: Location): Promise<boolean> => {
     try {
       setError(null);
-      const { data, error } = await supabase.rpc('is_in_zone', {
+      const { data, error } = await supabase.rpc('is_in_zone' as any, {
         player_lat: location.lat,
         player_lng: location.lng,
         zone_type: 'restricted',
-      });
+      } as any);
 
       if (error) throw error;
 
-      return data && data.length > 0;
+      const typedData = data as any[] | null;
+      return !!(typedData && typedData.length > 0);
     } catch (err) {
       console.error('Error checking restricted zone:', err);
       setError(err instanceof Error ? err.message : 'Failed to check restricted zone');

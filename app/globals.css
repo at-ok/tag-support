@@ -296,7 +296,7 @@
   }
 
   .haptic-heavy {
-    @apply transition-all duration-250 ease-out;
+    @apply transition-all duration-300 ease-out;
   }
 
   .haptic-heavy:active {
