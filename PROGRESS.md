@@ -118,18 +118,18 @@ tag-support/ (20ファイル作成)
 ## テスト状況
 
 ### 自動テスト環境 ✅
-- [x] **ユニットテスト (Vitest)** - 41/41テスト成功（100%）
+- [x] **ユニットテスト (Vitest)** - 61/61テスト成功（100%） ⭐️ 更新
   - lib/supabase.ts: 4/4テスト成功
   - hooks/useLocation.ts: 8/8テスト成功
-  - hooks/useAuth.tsx: 9/9テスト成功
-  - hooks/useGame.tsx: 10/10テスト成功 ⭐️ NEW
-  - hooks/useMissions.tsx: 10/10テスト成功 ⭐️ NEW
-- [x] **コードカバレッジ** - 88.99% (hooks/)
-  - useAuth.tsx: 97.01%
-  - useLocation.ts: 97.14%
-  - useGame.tsx: 79.45%
-  - useMissions.tsx: 90.84%
-  - supabase.ts: 100%
+  - hooks/useAuth.tsx: 9/9テスト成功 (Supabaseベースに修正)
+  - hooks/useGame.tsx: 10/10テスト成功 (Supabaseベースに修正)
+  - hooks/useMissions.tsx: 13/13テスト成功 (Supabaseベースに修正)
+  - hooks/useCapture.tsx: 8/8テスト成功
+  - hooks/useZones.tsx: 9/9テスト成功
+- [x] **テスト品質向上** ⭐️ NEW
+  - Firebase → Supabase への完全移行完了
+  - 全テストがSupabaseのモックを使用
+  - テストカバレッジ維持（高品質コード保証）
 - [x] **E2Eテスト (Playwright)**
   - ホームページテスト
   - 役職別ページテスト（逃走者・鬼・ゲームマスター）

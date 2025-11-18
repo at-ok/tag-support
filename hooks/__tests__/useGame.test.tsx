@@ -6,28 +6,48 @@ import type { Game, GameSettings } from '@/types';
 
 // Mock dependencies
 vi.mock('../useAuth');
-vi.mock('@/lib/firebase', () => ({
-  db: {},
-}));
 
-const mockOnSnapshot = vi.fn();
-const mockSetDoc = vi.fn();
-const mockUpdateDoc = vi.fn();
-const mockDoc = vi.fn();
-const mockServerTimestamp = vi.fn(() => new Date());
+const mockSelect = vi.fn();
+const mockEq = vi.fn();
+const mockLimit = vi.fn();
+const mockSingle = vi.fn();
+const mockInsert = vi.fn();
+const mockUpdate = vi.fn();
+const mockFrom = vi.fn();
+const mockChannel = vi.fn();
+const mockRemoveChannel = vi.fn();
+const mockOn = vi.fn();
+const mockSubscribe = vi.fn();
 
-vi.mock('firebase/firestore', () => ({
-  doc: (...args: unknown[]) => mockDoc(...args),
-  onSnapshot: (...args: unknown[]) => mockOnSnapshot(...args),
-  setDoc: (...args: unknown[]) => mockSetDoc(...args),
-  updateDoc: (...args: unknown[]) => mockUpdateDoc(...args),
-  serverTimestamp: () => mockServerTimestamp(),
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: (...args: unknown[]) => mockFrom(...args),
+    channel: (...args: unknown[]) => mockChannel(...args),
+    removeChannel: (...args: unknown[]) => mockRemoveChannel(...args),
+  },
 }));
 
 describe('useGame', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockOnSnapshot.mockReturnValue(() => {});
+
+    // Setup default mock chain
+    mockSingle.mockResolvedValue({ data: null, error: null });
+    mockLimit.mockReturnValue({ single: mockSingle });
+    mockEq.mockReturnValue({ single: mockSingle });
+    mockSelect.mockReturnValue({ limit: mockLimit, eq: mockEq });
+    mockUpdate.mockReturnValue({ eq: mockEq });
+    mockInsert.mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({
+      select: mockSelect,
+      insert: mockInsert,
+      update: mockUpdate,
+    });
+
+    // Setup realtime channel mock
+    mockSubscribe.mockReturnValue(undefined);
+    mockOn.mockReturnValue({ subscribe: mockSubscribe });
+    mockChannel.mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
   });
 
   afterEach(() => {
@@ -43,7 +63,7 @@ describe('useGame', () => {
   it('should initialize with loading state', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      firebaseUser: null,
+      session: null,
       loading: false,
       error: null,
       signIn: vi.fn(),
@@ -69,48 +89,41 @@ describe('useGame', () => {
 
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
 
-    const mockGame: Game = {
+    const mockGameData = {
       id: 'current-game',
       status: 'waiting',
-      duration: 3600,
-      settings: {
-        captureRadius: 10,
-        visibilityRadius: 200,
-      },
-      players: [],
-      missions: [],
+      duration_minutes: 60,
+      start_time: null,
+      end_time: null,
     };
 
-    let snapshotCallback: (snapshot: any) => void = () => {};
-    mockOnSnapshot.mockImplementation((_, callback) => {
-      snapshotCallback = callback;
-      return () => {};
+    mockSingle.mockResolvedValue({
+      data: mockGameData,
+      error: null,
     });
 
-    renderHook(() => useGame(), {
+    let channelCallback: (payload: any) => void = () => {};
+    mockOn.mockImplementation((event: string, filter: any, callback: any) => {
+      channelCallback = callback;
+      return { subscribe: mockSubscribe };
+    });
+
+    const { result } = renderHook(() => useGame(), {
       wrapper: GameProvider,
     });
 
-    expect(mockOnSnapshot).toHaveBeenCalled();
-
-    // Simulate snapshot update
-    act(() => {
-      snapshotCallback({
-        exists: () => true,
-        data: () => mockGame,
-      });
-    });
-
     await waitFor(() => {
-      expect(mockOnSnapshot).toHaveBeenCalled();
+      expect(result.current.loading).toBe(false);
     });
+
+    expect(mockChannel).toHaveBeenCalledWith('game_state_changes');
   });
 
   it('should create a new game as gamemaster', async () => {
@@ -124,40 +137,37 @@ describe('useGame', () => {
 
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
 
-    mockSetDoc.mockResolvedValue(undefined);
+    mockInsert.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useGame(), {
       wrapper: GameProvider,
     });
 
     const settings: GameSettings = {
-      captureRadius: 10,
-      visibilityRadius: 200,
+      locationUpdateInterval: 5000,
+      locationAccuracy: 10,
+      safeZones: [],
+      restrictedZones: [],
+      chaserRadarRange: 100,
     };
 
     await act(async () => {
-      await result.current.createGame(settings, 3600);
+      await result.current.createGame(settings, 60);
     });
 
-    expect(mockSetDoc).toHaveBeenCalled();
-    const setDocCall = mockSetDoc.mock.calls[0];
-    expect(setDocCall).toBeDefined();
-    const gameData = setDocCall[1];
-    expect(gameData).toMatchObject({
-      id: 'current-game',
-      status: 'waiting',
-      duration: 3600,
-      settings,
-      players: [],
-      missions: [],
-    });
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'waiting',
+        duration_minutes: 60,
+      })
+    );
   });
 
   it('should reject createGame for non-gamemaster users', async () => {
@@ -171,7 +181,7 @@ describe('useGame', () => {
 
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
@@ -183,13 +193,16 @@ describe('useGame', () => {
     });
 
     const settings: GameSettings = {
-      captureRadius: 10,
-      visibilityRadius: 200,
+      locationUpdateInterval: 5000,
+      locationAccuracy: 10,
+      safeZones: [],
+      restrictedZones: [],
+      chaserRadarRange: 100,
     };
 
     await expect(async () => {
       await act(async () => {
-        await result.current.createGame(settings, 3600);
+        await result.current.createGame(settings, 60);
       });
     }).rejects.toThrow('Only game masters can create games');
   });
@@ -203,56 +216,49 @@ describe('useGame', () => {
       lastUpdated: new Date(),
     };
 
-    const mockGame: Game = {
-      id: 'current-game',
-      status: 'waiting',
-      duration: 3600,
-      settings: {
-        captureRadius: 10,
-        visibilityRadius: 200,
-      },
-      players: [],
-      missions: [],
-    };
-
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
 
-    let snapshotCallback: (snapshot: any) => void = () => {};
-    mockOnSnapshot.mockImplementation((_, callback) => {
-      snapshotCallback = callback;
-      return () => {};
+    const mockGameData = {
+      id: 'current-game',
+      status: 'waiting',
+      duration_minutes: 60,
+      start_time: null,
+      end_time: null,
+    };
+
+    mockSingle.mockResolvedValue({
+      data: mockGameData,
+      error: null,
     });
 
-    mockUpdateDoc.mockResolvedValue(undefined);
+    mockUpdate.mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    });
 
     const { result } = renderHook(() => useGame(), {
       wrapper: GameProvider,
     });
 
-    // Set initial game state
-    act(() => {
-      snapshotCallback({
-        exists: () => true,
-        data: () => mockGame,
-      });
+    await waitFor(() => {
+      expect(result.current.game).not.toBeNull();
     });
 
     await act(async () => {
       await result.current.startGame();
     });
 
-    expect(mockUpdateDoc).toHaveBeenCalled();
-    const updateCall = mockUpdateDoc.mock.calls[0];
-    expect(updateCall[1]).toMatchObject({
-      status: 'active',
-    });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'active',
+      })
+    );
   });
 
   it('should pause a game', async () => {
@@ -264,55 +270,49 @@ describe('useGame', () => {
       lastUpdated: new Date(),
     };
 
-    const mockGame: Game = {
-      id: 'current-game',
-      status: 'active',
-      duration: 3600,
-      settings: {
-        captureRadius: 10,
-        visibilityRadius: 200,
-      },
-      players: [],
-      missions: [],
-    };
-
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
 
-    let snapshotCallback: (snapshot: any) => void = () => {};
-    mockOnSnapshot.mockImplementation((_, callback) => {
-      snapshotCallback = callback;
-      return () => {};
+    const mockGameData = {
+      id: 'current-game',
+      status: 'active',
+      duration_minutes: 60,
+      start_time: new Date().toISOString(),
+      end_time: null,
+    };
+
+    mockSingle.mockResolvedValue({
+      data: mockGameData,
+      error: null,
     });
 
-    mockUpdateDoc.mockResolvedValue(undefined);
+    mockUpdate.mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    });
 
     const { result } = renderHook(() => useGame(), {
       wrapper: GameProvider,
     });
 
-    act(() => {
-      snapshotCallback({
-        exists: () => true,
-        data: () => mockGame,
-      });
+    await waitFor(() => {
+      expect(result.current.game).not.toBeNull();
     });
 
     await act(async () => {
       await result.current.pauseGame();
     });
 
-    expect(mockUpdateDoc).toHaveBeenCalled();
-    const updateCall = mockUpdateDoc.mock.calls[0];
-    expect(updateCall[1]).toMatchObject({
-      status: 'paused',
-    });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'paused',
+      })
+    );
   });
 
   it('should end a game', async () => {
@@ -324,55 +324,49 @@ describe('useGame', () => {
       lastUpdated: new Date(),
     };
 
-    const mockGame: Game = {
-      id: 'current-game',
-      status: 'active',
-      duration: 3600,
-      settings: {
-        captureRadius: 10,
-        visibilityRadius: 200,
-      },
-      players: [],
-      missions: [],
-    };
-
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
 
-    let snapshotCallback: (snapshot: any) => void = () => {};
-    mockOnSnapshot.mockImplementation((_, callback) => {
-      snapshotCallback = callback;
-      return () => {};
+    const mockGameData = {
+      id: 'current-game',
+      status: 'active',
+      duration_minutes: 60,
+      start_time: new Date().toISOString(),
+      end_time: null,
+    };
+
+    mockSingle.mockResolvedValue({
+      data: mockGameData,
+      error: null,
     });
 
-    mockUpdateDoc.mockResolvedValue(undefined);
+    mockUpdate.mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    });
 
     const { result } = renderHook(() => useGame(), {
       wrapper: GameProvider,
     });
 
-    act(() => {
-      snapshotCallback({
-        exists: () => true,
-        data: () => mockGame,
-      });
+    await waitFor(() => {
+      expect(result.current.game).not.toBeNull();
     });
 
     await act(async () => {
       await result.current.endGame();
     });
 
-    expect(mockUpdateDoc).toHaveBeenCalled();
-    const updateCall = mockUpdateDoc.mock.calls[0];
-    expect(updateCall[1]).toMatchObject({
-      status: 'finished',
-    });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'finished',
+      })
+    );
   });
 
   it('should update game settings', async () => {
@@ -384,65 +378,49 @@ describe('useGame', () => {
       lastUpdated: new Date(),
     };
 
-    const mockGame: Game = {
-      id: 'current-game',
-      status: 'waiting',
-      duration: 3600,
-      settings: {
-        captureRadius: 10,
-        visibilityRadius: 200,
-      },
-      players: [],
-      missions: [],
-    };
-
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
 
-    let snapshotCallback: (snapshot: any) => void = () => {};
-    mockOnSnapshot.mockImplementation((_, callback) => {
-      snapshotCallback = callback;
-      return () => {};
-    });
+    const mockGameData = {
+      id: 'current-game',
+      status: 'waiting',
+      duration_minutes: 60,
+      start_time: null,
+      end_time: null,
+    };
 
-    mockUpdateDoc.mockResolvedValue(undefined);
+    mockSingle.mockResolvedValue({
+      data: mockGameData,
+      error: null,
+    });
 
     const { result } = renderHook(() => useGame(), {
       wrapper: GameProvider,
     });
 
-    act(() => {
-      snapshotCallback({
-        exists: () => true,
-        data: () => mockGame,
-      });
+    await waitFor(() => {
+      expect(result.current.game).not.toBeNull();
     });
 
     const newSettings = {
-      captureRadius: 15,
+      chaserRadarRange: 150,
     };
 
     await act(async () => {
       await result.current.updateGameSettings(newSettings);
     });
 
-    expect(mockUpdateDoc).toHaveBeenCalled();
-    const updateCall = mockUpdateDoc.mock.calls[0];
-    expect(updateCall[1]).toMatchObject({
-      settings: {
-        captureRadius: 15,
-        visibilityRadius: 200,
-      },
-    });
+    // Settings are updated in memory
+    expect(result.current.game?.settings.chaserRadarRange).toBe(150);
   });
 
-  it('should handle firestore timestamp conversion', async () => {
+  it('should handle timestamp conversion', async () => {
     const mockUser = {
       id: 'gm-123',
       nickname: 'GameMaster',
@@ -453,46 +431,34 @@ describe('useGame', () => {
 
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
-      firebaseUser: null,
+      session: { access_token: 'test-token' } as any,
       loading: false,
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
     });
 
-    const mockGameWithTimestamps = {
+    const mockGameData = {
       id: 'current-game',
       status: 'active',
-      duration: 3600,
-      settings: {
-        captureRadius: 10,
-        visibilityRadius: 200,
-      },
-      players: [],
-      missions: [],
-      startTime: { seconds: 1700000000, nanoseconds: 0 },
-      endTime: { seconds: 1700003600, nanoseconds: 0 },
+      duration_minutes: 60,
+      start_time: '2023-11-14T12:00:00.000Z',
+      end_time: '2023-11-14T13:00:00.000Z',
     };
 
-    let snapshotCallback: (snapshot: any) => void = () => {};
-    mockOnSnapshot.mockImplementation((_, callback) => {
-      snapshotCallback = callback;
-      return () => {};
+    mockSingle.mockResolvedValue({
+      data: mockGameData,
+      error: null,
     });
 
-    renderHook(() => useGame(), {
+    const { result } = renderHook(() => useGame(), {
       wrapper: GameProvider,
     });
 
-    act(() => {
-      snapshotCallback({
-        exists: () => true,
-        data: () => mockGameWithTimestamps,
-      });
-    });
-
     await waitFor(() => {
-      expect(mockOnSnapshot).toHaveBeenCalled();
+      expect(result.current.game).not.toBeNull();
+      expect(result.current.game?.startTime).toBeInstanceOf(Date);
+      expect(result.current.game?.endTime).toBeInstanceOf(Date);
     });
   });
 });

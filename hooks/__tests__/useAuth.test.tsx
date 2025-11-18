@@ -1,43 +1,49 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../useAuth';
-import type { User as FirebaseUser } from 'firebase/auth';
 
-// Mock Firebase
-const mockOnAuthStateChanged = vi.fn();
-const mockSignInAnonymously = vi.fn();
+// Mock Supabase
+const mockGetSession = vi.fn();
+const mockOnAuthStateChange = vi.fn();
+const mockSignUp = vi.fn();
 const mockSignOut = vi.fn();
-const mockGetDoc = vi.fn();
-const mockSetDoc = vi.fn();
-const mockDoc = vi.fn();
+const mockSelect = vi.fn();
+const mockEq = vi.fn();
+const mockSingle = vi.fn();
+const mockInsert = vi.fn();
+const mockFrom = vi.fn();
 
-// Mock auth object with signOut method
-const mockAuth = {
-  signOut: mockSignOut,
-};
-
-vi.mock('@/lib/firebase', () => ({
-  auth: {
-    signOut: (...args: unknown[]) => mockSignOut(...args),
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: (...args: unknown[]) => mockGetSession(...args),
+      onAuthStateChange: (...args: unknown[]) => mockOnAuthStateChange(...args),
+      signUp: (...args: unknown[]) => mockSignUp(...args),
+      signOut: (...args: unknown[]) => mockSignOut(...args),
+    },
+    from: (...args: unknown[]) => mockFrom(...args),
   },
-  db: {},
-}));
-
-vi.mock('firebase/auth', () => ({
-  onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...args),
-  signInAnonymously: (...args: unknown[]) => mockSignInAnonymously(...args),
-}));
-
-vi.mock('firebase/firestore', () => ({
-  doc: (...args: unknown[]) => mockDoc(...args),
-  getDoc: (...args: unknown[]) => mockGetDoc(...args),
-  setDoc: (...args: unknown[]) => mockSetDoc(...args),
 }));
 
 describe('useAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockOnAuthStateChanged.mockReturnValue(() => {});
+
+    // Default mock implementations
+    mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+    mockOnAuthStateChange.mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    });
+
+    // Setup chain for supabase.from('users').select().eq().single()
+    mockSingle.mockResolvedValue({ data: null, error: null });
+    mockEq.mockReturnValue({ single: mockSingle });
+    mockSelect.mockReturnValue({ eq: mockEq });
+    mockInsert.mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({
+      select: mockSelect,
+      insert: mockInsert,
+    });
   });
 
   it('should throw error when used outside AuthProvider', () => {
@@ -53,19 +59,33 @@ describe('useAuth', () => {
 
     expect(result.current.loading).toBe(true);
     expect(result.current.user).toBeNull();
-    expect(result.current.firebaseUser).toBeNull();
+    expect(result.current.session).toBeNull();
   });
 
   it('should handle user sign in with runner role', async () => {
-    const mockFirebaseUser = {
-      uid: 'test-uid-123',
-    } as FirebaseUser;
+    const mockUser = {
+      id: 'test-uid-123',
+      email: 'testplayer@temp.tag-game.local',
+    };
 
-    mockSignInAnonymously.mockResolvedValue({
-      user: mockFirebaseUser,
+    const mockUserData = {
+      id: 'test-uid-123',
+      nickname: 'TestPlayer',
+      role: 'runner',
+      team_id: 'TeamA',
+      status: 'active',
+      updated_at: new Date().toISOString(),
+    };
+
+    mockSignUp.mockResolvedValue({
+      data: { user: mockUser },
+      error: null,
     });
 
-    mockSetDoc.mockResolvedValue(undefined);
+    mockSingle.mockResolvedValue({
+      data: mockUserData,
+      error: null,
+    });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -75,32 +95,52 @@ describe('useAuth', () => {
       await result.current.signIn('TestPlayer', 'runner', 'TeamA');
     });
 
-    expect(mockSignInAnonymously).toHaveBeenCalled();
+    expect(mockSignUp).toHaveBeenCalled();
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'test-uid-123',
+        nickname: 'TestPlayer',
+        role: 'runner',
+        team_id: 'TeamA',
+        status: 'active',
+      })
+    );
 
-    // Verify setDoc was called with correct data structure
-    const setDocCall = mockSetDoc.mock.calls[0];
-    expect(setDocCall).toBeDefined();
-    const userData = setDocCall[1];
-    expect(userData).toMatchObject({
-      id: 'test-uid-123',
-      nickname: 'TestPlayer',
-      role: 'runner',
-      team: 'TeamA',
-      status: 'active',
+    await waitFor(() => {
+      expect(result.current.user).toMatchObject({
+        id: 'test-uid-123',
+        nickname: 'TestPlayer',
+        role: 'runner',
+        team: 'TeamA',
+        status: 'active',
+      });
     });
-    expect(userData.lastUpdated).toBeInstanceOf(Date);
   });
 
   it('should handle user sign in with chaser role', async () => {
-    const mockFirebaseUser = {
-      uid: 'test-uid-456',
-    } as FirebaseUser;
+    const mockUser = {
+      id: 'test-uid-456',
+      email: 'chaser1@temp.tag-game.local',
+    };
 
-    mockSignInAnonymously.mockResolvedValue({
-      user: mockFirebaseUser,
+    const mockUserData = {
+      id: 'test-uid-456',
+      nickname: 'Chaser1',
+      role: 'chaser',
+      team_id: null,
+      status: 'active',
+      updated_at: new Date().toISOString(),
+    };
+
+    mockSignUp.mockResolvedValue({
+      data: { user: mockUser },
+      error: null,
     });
 
-    mockSetDoc.mockResolvedValue(undefined);
+    mockSingle.mockResolvedValue({
+      data: mockUserData,
+      error: null,
+    });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -110,41 +150,47 @@ describe('useAuth', () => {
       await result.current.signIn('Chaser1', 'chaser');
     });
 
-    // Verify setDoc was called with correct data structure
-    const setDocCall = mockSetDoc.mock.calls[0];
-    expect(setDocCall).toBeDefined();
-    const userData = setDocCall[1];
-    expect(userData).toMatchObject({
-      id: 'test-uid-456',
-      nickname: 'Chaser1',
-      role: 'chaser',
-      status: 'active',
-      captureCount: 0,
+    expect(mockSignUp).toHaveBeenCalled();
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'test-uid-456',
+        nickname: 'Chaser1',
+        role: 'chaser',
+        team_id: null,
+        status: 'active',
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.user).toMatchObject({
+        id: 'test-uid-456',
+        nickname: 'Chaser1',
+        role: 'chaser',
+        status: 'active',
+      });
     });
-    expect(userData.lastUpdated).toBeInstanceOf(Date);
   });
 
   it('should handle sign in errors', async () => {
     const error = new Error('Sign in failed');
-    mockSignInAnonymously.mockRejectedValue(error);
+    mockSignUp.mockResolvedValue({
+      data: { user: null },
+      error: error,
+    });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
-    // Attempt to sign in and expect it to throw
     await expect(async () => {
       await act(async () => {
         await result.current.signIn('TestPlayer', 'runner');
       });
     }).rejects.toThrow('Sign in failed');
-
-    // Note: The error state might not be immediately available due to async nature
-    // The important part is that the error was thrown, which we verified above
   });
 
   it('should handle user sign out', async () => {
-    mockSignOut.mockResolvedValue(undefined);
+    mockSignOut.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -155,11 +201,13 @@ describe('useAuth', () => {
     });
 
     expect(mockSignOut).toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+    expect(result.current.session).toBeNull();
   });
 
   it('should handle sign out errors', async () => {
     const error = new Error('Sign out failed');
-    mockSignOut.mockRejectedValue(error);
+    mockSignOut.mockResolvedValue({ error });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -173,54 +221,83 @@ describe('useAuth', () => {
   });
 
   it('should load existing user data on auth state change', async () => {
-    const mockFirebaseUser = {
-      uid: 'existing-user-123',
-    } as FirebaseUser;
+    const mockUser = {
+      id: 'existing-user-123',
+      email: 'existing@temp.tag-game.local',
+    };
+
+    const mockSession = {
+      user: mockUser,
+      access_token: 'test-token',
+    };
 
     const mockUserData = {
       id: 'existing-user-123',
       nickname: 'ExistingUser',
       role: 'runner',
+      team_id: 'TeamB',
       status: 'active',
-      team: 'TeamB',
-      lastUpdated: new Date(),
+      updated_at: new Date().toISOString(),
     };
 
-    mockGetDoc.mockResolvedValue({
-      exists: () => true,
-      data: () => mockUserData,
-    });
-
-    let authStateCallback: (user: FirebaseUser | null) => void = () => {};
-    mockOnAuthStateChanged.mockImplementation((_, callback) => {
+    let authStateCallback: (event: string, session: any) => void = () => {};
+    mockOnAuthStateChange.mockImplementation((callback) => {
       authStateCallback = callback;
-      return () => {};
+      return {
+        data: { subscription: { unsubscribe: vi.fn() } },
+      };
     });
 
-    renderHook(() => useAuth(), {
+    mockSingle.mockResolvedValue({
+      data: mockUserData,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
     await act(async () => {
-      authStateCallback(mockFirebaseUser);
+      authStateCallback('SIGNED_IN', mockSession);
       await waitFor(() => {
-        expect(mockGetDoc).toHaveBeenCalled();
+        expect(mockSelect).toHaveBeenCalled();
       });
     });
 
-    expect(mockGetDoc).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(result.current.user).toMatchObject({
+        id: 'existing-user-123',
+        nickname: 'ExistingUser',
+        role: 'runner',
+        team: 'TeamB',
+      });
+    });
   });
 
   it('should handle gamemaster role without team', async () => {
-    const mockFirebaseUser = {
-      uid: 'gm-uid-789',
-    } as FirebaseUser;
+    const mockUser = {
+      id: 'gm-uid-789',
+      email: 'gamemaster@temp.tag-game.local',
+    };
 
-    mockSignInAnonymously.mockResolvedValue({
-      user: mockFirebaseUser,
+    const mockUserData = {
+      id: 'gm-uid-789',
+      nickname: 'GameMaster',
+      role: 'gamemaster',
+      team_id: null,
+      status: 'active',
+      updated_at: new Date().toISOString(),
+    };
+
+    mockSignUp.mockResolvedValue({
+      data: { user: mockUser },
+      error: null,
     });
 
-    mockSetDoc.mockResolvedValue(undefined);
+    mockSingle.mockResolvedValue({
+      data: mockUserData,
+      error: null,
+    });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -230,19 +307,25 @@ describe('useAuth', () => {
       await result.current.signIn('GameMaster', 'gamemaster');
     });
 
-    // Verify setDoc was called with correct data structure
-    const setDocCall = mockSetDoc.mock.calls[0];
-    expect(setDocCall).toBeDefined();
-    const userData = setDocCall[1];
-    expect(userData).toMatchObject({
-      id: 'gm-uid-789',
-      nickname: 'GameMaster',
-      role: 'gamemaster',
-      status: 'active',
-    });
-    expect(userData.lastUpdated).toBeInstanceOf(Date);
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'gm-uid-789',
+        nickname: 'GameMaster',
+        role: 'gamemaster',
+        team_id: null,
+        status: 'active',
+      })
+    );
 
-    // Verify team field is not included
-    expect(userData).not.toHaveProperty('team');
+    await waitFor(() => {
+      expect(result.current.user).toMatchObject({
+        id: 'gm-uid-789',
+        nickname: 'GameMaster',
+        role: 'gamemaster',
+        status: 'active',
+      });
+      // team should be undefined for gamemaster with team_id: null
+      expect(result.current.user?.team).toBeUndefined();
+    });
   });
 });
