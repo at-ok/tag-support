@@ -19,10 +19,12 @@
 ### 主要コンポーネントクラス
 
 #### カード
+
 - `card-mobile`: 基本カード（elevation-2）
 - `card-elevated`: 強調カード（elevation-4）
 
 #### ボタン
+
 - `btn-primary`: 青（主要アクション）
 - `btn-success`: 緑（開始/成功）
 - `btn-danger`: 赤（終了/削除）
@@ -30,9 +32,11 @@
 - `btn-secondary`: アウトライン型（副次的）
 
 #### フォーム
+
 - `input-touch`: 48px最小高、2pxボーダー、フォーカス時にシャドウ
 
 #### ユーティリティ
+
 - `elevation-1` ～ `elevation-6`: シャドウレベル
 - `haptic-light/medium/heavy`: タッチフィードバック
 

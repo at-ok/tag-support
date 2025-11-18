@@ -477,7 +477,7 @@ describe('useMissions', () => {
 
     // Should not have called update for completion
     // (the update mock might be called 0 times or only for other reasons)
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify mission is not completed
     expect(result.current.missions[0]?.completed).toBe(false);

@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { AuthProvider } from "@/hooks/useAuth";
-import { GameProvider } from "@/hooks/useGame";
-import { MissionProvider } from "@/hooks/useMissions";
+import type { Metadata } from 'next';
+import './globals.css';
+import { AuthProvider } from '@/hooks/useAuth';
+import { GameProvider } from '@/hooks/useGame';
+import { MissionProvider } from '@/hooks/useMissions';
 
 export const metadata: Metadata = {
-  title: "Tag Support - Real-time Tag Game",
-  description: "PWA for supporting real-time tag games with location tracking",
-  manifest: "/manifest.json",
+  title: 'Tag Support - Real-time Tag Game',
+  description: 'PWA for supporting real-time tag games with location tracking',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -20,9 +20,7 @@ export default function RootLayout({
       <body className="antialiased">
         <AuthProvider>
           <GameProvider>
-            <MissionProvider>
-              {children}
-            </MissionProvider>
+            <MissionProvider>{children}</MissionProvider>
           </GameProvider>
         </AuthProvider>
       </body>

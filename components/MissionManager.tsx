@@ -21,7 +21,7 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
     lat: '',
     lng: '',
     radius: 50,
-    duration: 300 // 5 minutes
+    duration: 300, // 5 minutes
   });
 
   const handleCreateMission = async (e: React.FormEvent) => {
@@ -29,11 +29,14 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
     if (!newMission.title || !newMission.description) return;
 
     try {
-      const targetLocation: Location | undefined = newMission.lat && newMission.lng ? {
-        lat: parseFloat(newMission.lat),
-        lng: parseFloat(newMission.lng),
-        timestamp: new Date()
-      } : undefined;
+      const targetLocation: Location | undefined =
+        newMission.lat && newMission.lng
+          ? {
+              lat: parseFloat(newMission.lat),
+              lng: parseFloat(newMission.lng),
+              timestamp: new Date(),
+            }
+          : undefined;
 
       await createMission(
         newMission.title,
@@ -52,7 +55,7 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
         lat: '',
         lng: '',
         radius: 50,
-        duration: 300
+        duration: 300,
       });
       setShowCreateForm(false);
     } catch (error) {
@@ -70,7 +73,7 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
 
   const handleDeleteMission = async (missionId: string) => {
     if (!confirm('Are you sure you want to delete this mission?')) return;
-    
+
     try {
       await deleteMission(missionId);
     } catch (error) {
@@ -83,19 +86,19 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
   if (isGameMaster) {
     return (
       <div className="card-mobile">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
               <span className="text-xl">🎯</span>
             </div>
-            <h3 className="font-bold text-lg text-slate-800">ミッション管理</h3>
+            <h3 className="text-lg font-bold text-slate-800">ミッション管理</h3>
           </div>
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 elevation-2 hover:elevation-3"
+            className="elevation-2 hover:elevation-3 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200"
             style={{
               backgroundColor: showCreateForm ? '#ef4444' : '#3b82f6',
-              color: 'white'
+              color: 'white',
             }}
           >
             {showCreateForm ? '✕ キャンセル' : '+ ミッション作成'}
@@ -103,32 +106,35 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-sm mb-4 flex items-start gap-2">
+          <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             <span className="text-lg">⚠️</span>
             <span>{error}</span>
           </div>
         )}
 
         {showCreateForm && (
-          <form onSubmit={handleCreateMission} className="space-y-4 p-4 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-slate-200 animate-in fade-in slide-in-from-top-2 duration-200">
+          <form
+            onSubmit={handleCreateMission}
+            className="animate-in fade-in slide-in-from-top-2 space-y-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-blue-50 p-4 duration-200"
+          >
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">タイトル</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">タイトル</label>
               <input
                 type="text"
                 value={newMission.title}
                 onChange={(e) => setNewMission({ ...newMission, title: e.target.value })}
-                className="w-full input-touch"
+                className="input-touch w-full"
                 placeholder="ミッションのタイトル"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">説明</label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">説明</label>
               <textarea
                 value={newMission.description}
                 onChange={(e) => setNewMission({ ...newMission, description: e.target.value })}
-                className="w-full input-touch resize-none"
+                className="input-touch w-full resize-none"
                 placeholder="ミッションの詳細"
                 rows={3}
                 required
@@ -137,11 +143,13 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">種類</label>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">種類</label>
                 <select
                   value={newMission.type}
-                  onChange={(e) => setNewMission({ ...newMission, type: e.target.value as Mission['type'] })}
-                  className="w-full input-touch"
+                  onChange={(e) =>
+                    setNewMission({ ...newMission, type: e.target.value as Mission['type'] })
+                  }
+                  className="input-touch w-full"
                 >
                   <option value="area">📍 エリア到達</option>
                   <option value="escape">🏃 脱出ポイント</option>
@@ -151,12 +159,12 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">範囲 (m)</label>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">範囲 (m)</label>
                 <input
                   type="number"
                   value={newMission.radius}
                   onChange={(e) => setNewMission({ ...newMission, radius: Number(e.target.value) })}
-                  className="w-full input-touch"
+                  className="input-touch w-full"
                   min="10"
                   max="500"
                 />
@@ -164,27 +172,27 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
             </div>
 
             {(newMission.type === 'area' || newMission.type === 'escape') && (
-              <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="animate-in fade-in slide-in-from-top-2 grid grid-cols-2 gap-3 duration-200">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">緯度</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">緯度</label>
                   <input
                     type="number"
                     step="0.000001"
                     value={newMission.lat}
                     onChange={(e) => setNewMission({ ...newMission, lat: e.target.value })}
-                    className="w-full input-touch"
+                    className="input-touch w-full"
                     placeholder="35.658584"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">経度</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">経度</label>
                   <input
                     type="number"
                     step="0.000001"
                     value={newMission.lng}
                     onChange={(e) => setNewMission({ ...newMission, lng: e.target.value })}
-                    className="w-full input-touch"
+                    className="input-touch w-full"
                     placeholder="139.745438"
                   />
                 </div>
@@ -192,10 +200,7 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
             )}
 
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                type="submit"
-                className="btn-success"
-              >
+              <button type="submit" className="btn-success">
                 ✓ 作成
               </button>
               <button
@@ -209,37 +214,45 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
           </form>
         )}
 
-        <div className="space-y-3 mt-4">
+        <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-slate-800">アクティブミッション</h4>
-            <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-semibold">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
               {missions.length}件
             </span>
           </div>
 
           {missions.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="w-12 h-12 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
                 <span className="text-2xl opacity-50">🎯</span>
               </div>
-              <p className="text-slate-500 text-sm">ミッションがまだ作成されていません</p>
+              <p className="text-sm text-slate-500">ミッションがまだ作成されていません</p>
             </div>
           ) : (
-            missions.map(mission => (
-              <div key={mission.id} className="bg-white rounded-xl p-4 border border-slate-200 elevation-1 hover:elevation-2 transition-shadow">
-                <div className="flex justify-between items-start mb-3">
+            missions.map((mission) => (
+              <div
+                key={mission.id}
+                className="elevation-1 hover:elevation-2 rounded-xl border border-slate-200 bg-white p-4 transition-shadow"
+              >
+                <div className="mb-3 flex items-start justify-between">
                   <div className="flex-1">
-                    <h5 className="font-semibold text-slate-800 mb-1">{mission.title}</h5>
-                    <p className="text-sm text-slate-600 mb-2">{mission.description}</p>
-                    <div className="flex gap-2 flex-wrap">
-                      <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-lg font-medium">
-                        {mission.type === 'area' ? '📍 エリア到達' :
-                         mission.type === 'escape' ? '🏃 脱出ポイント' :
-                         mission.type === 'common' ? '🎯 共通タスク' :
-                         mission.type === 'rescue' ? '🚑 救出ミッション' : mission.type}
+                    <h5 className="mb-1 font-semibold text-slate-800">{mission.title}</h5>
+                    <p className="mb-2 text-sm text-slate-600">{mission.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                        {mission.type === 'area'
+                          ? '📍 エリア到達'
+                          : mission.type === 'escape'
+                            ? '🏃 脱出ポイント'
+                            : mission.type === 'common'
+                              ? '🎯 共通タスク'
+                              : mission.type === 'rescue'
+                                ? '🚑 救出ミッション'
+                                : mission.type}
                       </span>
                       {mission.radius && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-lg font-medium">
+                        <span className="rounded-lg bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
                           範囲 {mission.radius}m
                         </span>
                       )}
@@ -247,12 +260,12 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
                   </div>
                   <button
                     onClick={() => handleDeleteMission(mission.id)}
-                    className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg p-2 transition-colors"
+                    className="ml-2 rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
                   >
                     <span className="text-lg">🗑️</span>
                   </button>
                 </div>
-                <div className="text-xs text-slate-500 flex items-center gap-1">
+                <div className="flex items-center gap-1 text-xs text-slate-500">
                   <span>✓</span>
                   <span>{mission.completedBy.length}人が完了</span>
                 </div>
@@ -267,15 +280,15 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
   // Player view
   return (
     <div className="card-mobile">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-pink-600">
           <span className="text-xl">🎯</span>
         </div>
-        <h3 className="font-bold text-lg text-slate-800">アクティブミッション</h3>
+        <h3 className="text-lg font-bold text-slate-800">アクティブミッション</h3>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-sm mb-4 flex items-start gap-2">
+        <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <span className="text-lg">⚠️</span>
           <span>{error}</span>
         </div>
@@ -283,37 +296,42 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
 
       <div className="space-y-3">
         {displayMissions.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="w-12 h-12 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+          <div className="py-8 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
               <span className="text-2xl opacity-50">🎯</span>
             </div>
-            <p className="text-slate-500 text-sm">アクティブなミッションがありません</p>
+            <p className="text-sm text-slate-500">アクティブなミッションがありません</p>
           </div>
         ) : (
-          displayMissions.map(mission => {
+          displayMissions.map((mission) => {
             const isCompleted = user && mission.completedBy.includes(user.id);
             return (
               <div
                 key={mission.id}
-                className={`p-4 rounded-xl border transition-all ${
+                className={`rounded-xl border p-4 transition-all ${
                   isCompleted
-                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-                    : 'bg-white border-slate-200 elevation-1 hover:elevation-2'
+                    ? 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50'
+                    : 'elevation-1 hover:elevation-2 border-slate-200 bg-white'
                 }`}
               >
-                <div className="flex justify-between items-start">
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-slate-800 mb-1">{mission.title}</h4>
-                    <p className="text-sm text-slate-600 mb-3">{mission.description}</p>
-                    <div className="flex gap-2 flex-wrap">
-                      <span className="text-xs bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
-                        {mission.type === 'area' ? '📍 エリア到達' :
-                         mission.type === 'escape' ? '🏃 脱出ポイント' :
-                         mission.type === 'common' ? '🎯 共通タスク' :
-                         mission.type === 'rescue' ? '🚑 救出ミッション' : mission.type}
+                    <h4 className="mb-1 font-semibold text-slate-800">{mission.title}</h4>
+                    <p className="mb-3 text-sm text-slate-600">{mission.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium">
+                        {mission.type === 'area'
+                          ? '📍 エリア到達'
+                          : mission.type === 'escape'
+                            ? '🏃 脱出ポイント'
+                            : mission.type === 'common'
+                              ? '🎯 共通タスク'
+                              : mission.type === 'rescue'
+                                ? '🚑 救出ミッション'
+                                : mission.type}
                       </span>
                       {mission.radius && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-medium">
+                        <span className="rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-700">
                           範囲 {mission.radius}m
                         </span>
                       )}
@@ -322,20 +340,20 @@ export default function MissionManager({ isGameMaster, userMissions }: MissionMa
                   <div className="ml-4">
                     {isCompleted ? (
                       <div className="flex flex-col items-center">
-                        <span className="text-2xl mb-1">✅</span>
-                        <span className="text-xs text-green-700 font-semibold">完了</span>
+                        <span className="mb-1 text-2xl">✅</span>
+                        <span className="text-xs font-semibold text-green-700">完了</span>
                       </div>
                     ) : mission.type === 'rescue' ? (
                       <button
                         onClick={() => handleCompleteMission(mission.id)}
-                        className="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium text-sm hover:bg-orange-600 elevation-2 hover:elevation-3 transition-all haptic-medium"
+                        className="elevation-2 hover:elevation-3 haptic-medium rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-orange-600"
                       >
                         🚑 救出完了
                       </button>
                     ) : (
                       <div className="flex flex-col items-center">
-                        <span className="text-2xl mb-1 opacity-40">⏳</span>
-                        <span className="text-xs text-slate-500 font-medium">進行中</span>
+                        <span className="mb-1 text-2xl opacity-40">⏳</span>
+                        <span className="text-xs font-medium text-slate-500">進行中</span>
                       </div>
                     )}
                   </div>

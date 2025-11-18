@@ -8,14 +8,14 @@
 
 ### なぜSupabaseに移行するのか？
 
-| 項目 | Firebase | Supabase | 判定 |
-|------|----------|----------|------|
-| **無料枠** | Firestore: 50K reads/day | PostgreSQL: 500MB DB | ✅ Supabaseが有利 |
-| **リアルタイム** | 有料（Blazeプラン必須） | 完全無料 | ✅ Supabaseが有利 |
-| **位置情報クエリ** | GeoFirestore必要 | PostGIS内蔵 | ✅ Supabaseが圧倒的 |
-| **SQL** | 使えない | PostgreSQL標準 | ✅ Supabaseが有利 |
-| **複雑なクエリ** | 制限あり | フル機能 | ✅ Supabaseが有利 |
-| **総合コスト** | $0-5/月 | $0/月 | ✅ Supabase完全無料 |
+| 項目               | Firebase                 | Supabase             | 判定                |
+| ------------------ | ------------------------ | -------------------- | ------------------- |
+| **無料枠**         | Firestore: 50K reads/day | PostgreSQL: 500MB DB | ✅ Supabaseが有利   |
+| **リアルタイム**   | 有料（Blazeプラン必須）  | 完全無料             | ✅ Supabaseが有利   |
+| **位置情報クエリ** | GeoFirestore必要         | PostGIS内蔵          | ✅ Supabaseが圧倒的 |
+| **SQL**            | 使えない                 | PostgreSQL標準       | ✅ Supabaseが有利   |
+| **複雑なクエリ**   | 制限あり                 | フル機能             | ✅ Supabaseが有利   |
+| **総合コスト**     | $0-5/月                  | $0/月                | ✅ Supabase完全無料 |
 
 **結論**: 本プロジェクトの要件（6-10人、リアルタイム位置同期、完全無料）に最適。
 
@@ -111,6 +111,7 @@ migrateUsers().then(() => console.log('Migration complete!'));
 ### 3.1 認証の移行
 
 #### Firebase（旧）
+
 ```typescript
 import { auth } from '@/lib/firebase';
 import { signInAnonymously } from 'firebase/auth';
@@ -119,6 +120,7 @@ await signInAnonymously(auth);
 ```
 
 #### Supabase（新）
+
 ```typescript
 import { supabase } from '@/lib/supabase';
 
@@ -126,52 +128,55 @@ import { supabase } from '@/lib/supabase';
 const { data, error } = await supabase.auth.signInAnonymously();
 
 // または、ニックネームベースの簡易認証
-const { data: user } = await supabase.from('users').insert({
-  nickname: 'Player1',
-  role: 'runner',
-}).select().single();
+const { data: user } = await supabase
+  .from('users')
+  .insert({
+    nickname: 'Player1',
+    role: 'runner',
+  })
+  .select()
+  .single();
 ```
 
 ### 3.2 データ取得の移行
 
 #### Firebase（旧）
+
 ```typescript
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
 const snapshot = await getDocs(collection(db, 'users'));
-const users = snapshot.docs.map(doc => doc.data());
+const users = snapshot.docs.map((doc) => doc.data());
 ```
 
 #### Supabase（新）
+
 ```typescript
 import { supabase } from '@/lib/supabase';
 
-const { data: users, error } = await supabase
-  .from('users')
-  .select('*');
+const { data: users, error } = await supabase.from('users').select('*');
 ```
 
 ### 3.3 リアルタイムサブスクリプションの移行
 
 #### Firebase（旧）
+
 ```typescript
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 
-const unsubscribe = onSnapshot(
-  collection(db, 'player_locations'),
-  (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-      if (change.type === 'added' || change.type === 'modified') {
-        console.log('Location updated:', change.doc.data());
-      }
-    });
-  }
-);
+const unsubscribe = onSnapshot(collection(db, 'player_locations'), (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    if (change.type === 'added' || change.type === 'modified') {
+      console.log('Location updated:', change.doc.data());
+    }
+  });
+});
 ```
 
 #### Supabase（新）
+
 ```typescript
 import { supabase } from '@/lib/supabase';
 
@@ -199,6 +204,7 @@ return () => {
 ### 3.4 位置情報クエリの移行
 
 #### Firebase（旧）- GeoFirestore必要
+
 ```typescript
 import * as geofirestore from 'geofirestore';
 
@@ -218,6 +224,7 @@ query.get().then((snapshot) => {
 ```
 
 #### Supabase（新）- PostGIS内蔵
+
 ```typescript
 import { supabase } from '@/lib/supabase';
 
@@ -285,20 +292,20 @@ export function useAuth() {
     });
 
     // 認証状態の変更を監視
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            .then(({ data }) => setUser(data));
-        } else {
-          setUser(null);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => setUser(data));
+      } else {
+        setUser(null);
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -435,6 +442,7 @@ test('location tracking works', async ({ page, context }) => {
 ### 6.1 GitHub Actionsの動作確認
 
 プルリクエストを作成すると自動的に：
+
 1. ✅ ESLint チェック
 2. ✅ TypeScript 型チェック
 3. ✅ Prettier フォーマットチェック
@@ -445,6 +453,7 @@ test('location tracking works', async ({ page, context }) => {
 ### 6.2 Vercel自動デプロイ
 
 `main`ブランチへのpushで自動的に：
+
 1. ✅ テスト実行
 2. ✅ ビルド
 3. ✅ Vercelにデプロイ
@@ -455,25 +464,33 @@ test('location tracking works', async ({ page, context }) => {
 ## よくある質問（FAQ）
 
 ### Q1: Firebaseを完全に削除していいか？
+
 **A**: 既存のデータや機能がない場合は削除可能です。移行完了後、`npm uninstall firebase` で削除できます。
 
 ### Q2: SupabaseとFirebaseを併用できるか？
+
 **A**: 可能ですが、複雑になるため推奨しません。段階的移行の場合は一時的に併用できます。
 
 ### Q3: 無料枠を超えたらどうなるか？
+
 **A**: Supabaseの無料枠：
+
 - DB: 500MB（本プロジェクトでは十分）
 - API requests: 無制限
 - Bandwidth: 5GB/月（10人×1日なら余裕）
 
 ### Q4: 本番環境でのパフォーマンスは？
+
 **A**:
+
 - PostgreSQL + PostGIS は高速
 - Tokyo リージョン選択でレイテンシ最小化
 - 空間インデックスで位置クエリは<10ms
 
 ### Q5: ローカル開発環境は？
+
 **A**: Supabase CLIでローカルDBを起動可能：
+
 ```bash
 npx supabase start
 ```
@@ -483,6 +500,7 @@ npx supabase start
 ## まとめ
 
 ### ✅ 完了したこと
+
 - CI/CDパイプライン構築
 - テスト環境整備（Vitest + Playwright）
 - Supabase設定ファイル作成
@@ -491,6 +509,7 @@ npx supabase start
 - ESLint/Prettier設定
 
 ### 🔄 次のステップ
+
 1. Supabaseプロジェクト作成
 2. 環境変数設定（`.env.local`）
 3. データベースマイグレーション実行
@@ -499,6 +518,7 @@ npx supabase start
 6. Vercelデプロイ
 
 ### 📚 参考資料
+
 - [Supabase Documentation](https://supabase.com/docs)
 - [PostGIS Documentation](https://postgis.net/docs/)
 - [Next.js Documentation](https://nextjs.org/docs)

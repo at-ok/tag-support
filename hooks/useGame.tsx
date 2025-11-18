@@ -37,11 +37,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Initial fetch
     const fetchGame = async () => {
       try {
-        const { data, error } = await supabase
-          .from('game_state')
-          .select('*')
-          .limit(1)
-          .single();
+        const { data, error } = await supabase.from('game_state').select('*').limit(1).single();
 
         if (error && error.code !== 'PGRST116') throw error; // Ignore "no rows" error
 
@@ -122,9 +118,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         duration_minutes: duration,
       };
 
-      const { error } = await (supabase
-        .from('game_state')
-        .insert(insertPayload as never));
+      const { error } = await supabase.from('game_state').insert(insertPayload as never);
 
       if (error) throw error;
     } catch (err) {
@@ -144,10 +138,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         status: 'active',
         start_time: new Date().toISOString(),
       };
-      const { error } = await (supabase
+      const { error } = await supabase
         .from('game_state')
         .update(updatePayload as never)
-        .eq('id', game.id));
+        .eq('id', game.id);
 
       if (error) throw error;
     } catch (err) {
@@ -164,10 +158,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       const updatePayload: Record<string, unknown> = { status: 'paused' };
-      const { error } = await (supabase
+      const { error } = await supabase
         .from('game_state')
         .update(updatePayload as never)
-        .eq('id', game.id));
+        .eq('id', game.id);
 
       if (error) throw error;
     } catch (err) {
@@ -187,10 +181,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         status: 'finished',
         end_time: new Date().toISOString(),
       };
-      const { error } = await (supabase
+      const { error } = await supabase
         .from('game_state')
         .update(updatePayload as never)
-        .eq('id', game.id));
+        .eq('id', game.id);
 
       if (error) throw error;
     } catch (err) {
@@ -217,16 +211,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <GameContext.Provider value={{
-      game,
-      loading,
-      error,
-      createGame,
-      startGame,
-      pauseGame,
-      endGame,
-      updateGameSettings
-    }}>
+    <GameContext.Provider
+      value={{
+        game,
+        loading,
+        error,
+        createGame,
+        startGame,
+        pauseGame,
+        endGame,
+        updateGameSettings,
+      }}
+    >
       {children}
     </GameContext.Provider>
   );

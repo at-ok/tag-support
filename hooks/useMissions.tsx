@@ -11,7 +11,14 @@ interface MissionContextType {
   missions: Mission[];
   loading: boolean;
   error: string | null;
-  createMission: (title: string, description: string, type: Mission['type'], targetLocation?: Location, radius?: number, duration?: number) => Promise<void>;
+  createMission: (
+    title: string,
+    description: string,
+    type: Mission['type'],
+    targetLocation?: Location,
+    radius?: number,
+    duration?: number
+  ) => Promise<void>;
   deleteMission: (missionId: string) => Promise<void>;
   completeMission: (missionId: string) => Promise<void>;
   checkMissionProgress: () => void;
@@ -22,19 +29,27 @@ const MissionContext = createContext<MissionContextType | undefined>(undefined);
 // Type mapping between database and app types
 const mapMissionType = (dbType: string): Mission['type'] => {
   switch (dbType) {
-    case 'area_arrival': return 'area';
-    case 'escape': return 'escape';
-    case 'rescue': return 'rescue';
-    default: return 'common';
+    case 'area_arrival':
+      return 'area';
+    case 'escape':
+      return 'escape';
+    case 'rescue':
+      return 'rescue';
+    default:
+      return 'common';
   }
 };
 
 const mapMissionTypeToDb = (appType: Mission['type']): string => {
   switch (appType) {
-    case 'area': return 'area_arrival';
-    case 'escape': return 'escape';
-    case 'rescue': return 'rescue';
-    default: return 'area_arrival';
+    case 'area':
+      return 'area_arrival';
+    case 'escape':
+      return 'escape';
+    case 'rescue':
+      return 'rescue';
+    default:
+      return 'area_arrival';
   }
 };
 
@@ -57,9 +72,7 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     // Initial fetch
     const fetchMissions = async () => {
       try {
-        const { data, error } = await supabase
-          .from('missions')
-          .select('*');
+        const { data, error } = await supabase.from('missions').select('*');
 
         if (error) throw error;
 
@@ -69,11 +82,14 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
             title: m.title,
             description: m.description,
             type: mapMissionType(m.type),
-            targetLocation: m.target_latitude && m.target_longitude ? {
-              lat: m.target_latitude,
-              lng: m.target_longitude,
-              timestamp: new Date(),
-            } : undefined,
+            targetLocation:
+              m.target_latitude && m.target_longitude
+                ? {
+                    lat: m.target_latitude,
+                    lng: m.target_longitude,
+                    timestamp: new Date(),
+                  }
+                : undefined,
             radius: m.radius_meters || undefined,
             duration: m.duration_seconds || undefined,
             completed: m.status === 'completed',
@@ -141,9 +157,7 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
         status: 'active',
       };
 
-      const { error } = await (supabase
-        .from('missions')
-        .insert(insertPayload as never));
+      const { error } = await supabase.from('missions').insert(insertPayload as never);
 
       if (error) throw error;
     } catch (err) {
@@ -159,10 +173,7 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const { error } = await supabase
-        .from('missions')
-        .delete()
-        .eq('id', missionId);
+      const { error } = await supabase.from('missions').delete().eq('id', missionId);
 
       if (error) throw error;
     } catch (err) {
@@ -177,10 +188,10 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       const updatePayload: Record<string, unknown> = { status: 'completed' };
-      const { error } = await (supabase
+      const { error } = await supabase
         .from('missions')
         .update(updatePayload as never)
-        .eq('id', missionId));
+        .eq('id', missionId);
 
       if (error) throw error;
     } catch (err) {
@@ -191,15 +202,15 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
 
   const calculateDistance = (pos1: Location, pos2: Location) => {
     const R = 6371e3; // Earth's radius in meters
-    const φ1 = pos1.lat * Math.PI/180;
-    const φ2 = pos2.lat * Math.PI/180;
-    const Δφ = (pos2.lat-pos1.lat) * Math.PI/180;
-    const Δλ = (pos2.lng-pos1.lng) * Math.PI/180;
+    const φ1 = (pos1.lat * Math.PI) / 180;
+    const φ2 = (pos2.lat * Math.PI) / 180;
+    const Δφ = ((pos2.lat - pos1.lat) * Math.PI) / 180;
+    const Δλ = ((pos2.lng - pos1.lng) * Math.PI) / 180;
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c; // Distance in meters
   };
@@ -207,7 +218,7 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
   const checkMissionProgress = () => {
     if (!user || !location) return;
 
-    missions.forEach(mission => {
+    missions.forEach((mission) => {
       // Skip if mission already completed
       if (mission.completed) return;
 
@@ -231,15 +242,17 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <MissionContext.Provider value={{
-      missions,
-      loading,
-      error,
-      createMission,
-      deleteMission,
-      completeMission,
-      checkMissionProgress
-    }}>
+    <MissionContext.Provider
+      value={{
+        missions,
+        loading,
+        error,
+        createMission,
+        deleteMission,
+        completeMission,
+        checkMissionProgress,
+      }}
+    >
       {children}
     </MissionContext.Provider>
   );

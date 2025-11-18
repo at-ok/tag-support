@@ -316,15 +316,17 @@ describe('useZones', () => {
   it('should check if player is in safe zone', async () => {
     const mockSelect = vi.fn().mockReturnThis();
     const mockEq = vi.fn().mockResolvedValue({
-      data: [{
-        id: mockSafeZone.id,
-        name: mockSafeZone.name,
-        type: mockSafeZone.type,
-        center_latitude: mockSafeZone.center.lat,
-        center_longitude: mockSafeZone.center.lng,
-        radius_meters: mockSafeZone.radius,
-        active: true,
-      }],
+      data: [
+        {
+          id: mockSafeZone.id,
+          name: mockSafeZone.name,
+          type: mockSafeZone.type,
+          center_latitude: mockSafeZone.center.lat,
+          center_longitude: mockSafeZone.center.lng,
+          radius_meters: mockSafeZone.radius,
+          active: true,
+        },
+      ],
       error: null,
     });
 
@@ -334,11 +336,13 @@ describe('useZones', () => {
     } as any);
 
     const mockRpc = vi.fn().mockResolvedValue({
-      data: [{
-        zone_id: mockSafeZone.id,
-        zone_name: mockSafeZone.name,
-        distance_meters: 50,
-      }],
+      data: [
+        {
+          zone_id: mockSafeZone.id,
+          zone_name: mockSafeZone.name,
+          distance_meters: 50,
+        },
+      ],
       error: null,
     });
     (supabase as any).rpc = mockRpc;
@@ -376,11 +380,13 @@ describe('useZones', () => {
     } as any);
 
     const mockRpc = vi.fn().mockResolvedValue({
-      data: [{
-        zone_id: mockRestrictedZone.id,
-        zone_name: mockRestrictedZone.name,
-        distance_meters: 30,
-      }],
+      data: [
+        {
+          zone_id: mockRestrictedZone.id,
+          zone_name: mockRestrictedZone.name,
+          distance_meters: 30,
+        },
+      ],
       error: null,
     });
     (supabase as any).rpc = mockRpc;
@@ -445,8 +451,8 @@ describe('useZones', () => {
           id: 'zone-3',
           name: 'New Safe Zone',
           type: 'safe',
-          center_latitude: 35.660000,
-          center_longitude: 139.750000,
+          center_latitude: 35.66,
+          center_longitude: 139.75,
           radius_meters: 120,
           active: true,
         },

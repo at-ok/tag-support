@@ -44,25 +44,25 @@ npm test && npm run test:e2e
 
 #### テストファイル別内訳
 
-| ファイル | テスト数 | 状態 |
-|---------|---------|------|
-| `lib/__tests__/supabase.test.ts` | 4 | ✅ |
-| `hooks/__tests__/useAuth.test.tsx` | 9 | ✅ |
-| `hooks/__tests__/useLocation.test.ts` | 8 | ✅ |
-| `hooks/__tests__/useGame.test.tsx` | 10 | ✅ |
-| `hooks/__tests__/useMissions.test.tsx` | 10 | ✅ |
+| ファイル                               | テスト数 | 状態 |
+| -------------------------------------- | -------- | ---- |
+| `lib/__tests__/supabase.test.ts`       | 4        | ✅   |
+| `hooks/__tests__/useAuth.test.tsx`     | 9        | ✅   |
+| `hooks/__tests__/useLocation.test.ts`  | 8        | ✅   |
+| `hooks/__tests__/useGame.test.tsx`     | 10       | ✅   |
+| `hooks/__tests__/useMissions.test.tsx` | 10       | ✅   |
 
 ### コードカバレッジ
 
-| モジュール | カバレッジ | Branch | Functions | Lines |
-|-----------|-----------|---------|-----------|-------|
-| **hooks/** | **88.99%** | 74.48% | 100% | 88.99% |
-| `useAuth.tsx` | 97.01% | 83.33% | 100% | 97.01% |
-| `useLocation.ts` | 97.14% | 84.61% | 100% | 97.14% |
-| `useGame.tsx` | 79.45% | 57.14% | 100% | 79.45% |
-| `useMissions.tsx` | 90.84% | 79.48% | 100% | 90.84% |
-| **lib/** | **48.64%** | 50% | 0% | 48.64% |
-| `supabase.ts` | 100% | 100% | 100% | 100% |
+| モジュール        | カバレッジ | Branch | Functions | Lines  |
+| ----------------- | ---------- | ------ | --------- | ------ |
+| **hooks/**        | **88.99%** | 74.48% | 100%      | 88.99% |
+| `useAuth.tsx`     | 97.01%     | 83.33% | 100%      | 97.01% |
+| `useLocation.ts`  | 97.14%     | 84.61% | 100%      | 97.14% |
+| `useGame.tsx`     | 79.45%     | 57.14% | 100%      | 79.45% |
+| `useMissions.tsx` | 90.84%     | 79.48% | 100%      | 90.84% |
+| **lib/**          | **48.64%** | 50%    | 0%        | 48.64% |
+| `supabase.ts`     | 100%       | 100%   | 100%      | 100%   |
 
 ### E2Eテスト (Playwright)
 
