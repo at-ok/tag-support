@@ -99,7 +99,7 @@
   - プレイヤー操作パネルの視覚的改善
   - ステータス変更・役職変更UIの改善
 
-### Phase 3: ビルド環境改善・型安全性向上 (完了) ⭐️ NEW
+### Phase 3: ビルド環境改善・型安全性向上 (完了)
 - [x] **CIビルドエラーの解決**
   - Google Fontsの外部依存を削除しシステムフォントに変更
   - Tailwind CSSクラスの修正（duration-250 → duration-300）
@@ -120,12 +120,38 @@
   - テストケースの更新（新しいフィールド名に対応）
   - 環境変数テストの改善
 
+### Phase 4: 位置履歴・リプレイ・統計機能 (完了) ⭐️ NEW
+- [x] **位置履歴記録システム**
+  - useLocationHistoryカスタムフック実装
+  - プレイヤーの位置、速度、方向を時系列で記録
+  - ユーザー/ゲームID別のフィルタリング対応
+  - 統計計算機能（総移動距離、平均/最高速度、活動時間）
+
+- [x] **ゲーム統計コンポーネント**
+  - GameStatsコンポーネント作成
+  - プレイヤー別の詳細統計表示
+  - リアルタイム統計更新
+  - ゲームマスターダッシュボードに統合
+
+- [x] **リプレイビューアコンポーネント**
+  - ReplayViewerコンポーネント実装
+  - タイムライン形式の再生UI
+  - 可変速度再生（1x/2x/4x/8x）
+  - シーク機能とプログレスバー表示
+  - 位置・速度・方向データの可視化
+
+- [x] **テスト・品質保証**
+  - 位置履歴機能の包括的テスト（9テスト）
+  - 全70テスト成功（100%）
+  - TypeScript型安全性の徹底
+  - ビルド成功確認
+
 ## 現在の制限事項
 
 ### 未実装機能
 - [ ] Push通知システム
-- [ ] リプレイ・ログ表示
 - [ ] マルチゲームマスター対応
+- [ ] データベーススキーマの作成（location_historyテーブル等）
 
 ### 技術的制約
 - Firebase設定が必要（.env.local）
@@ -135,19 +161,32 @@
 ## ファイル構成
 
 ```
-tag-support/ (20ファイル作成)
-├── lib/firebase.ts           # Firebase設定
+tag-support/ (25ファイル作成) ⭐️ 更新
+├── lib/
+│   ├── firebase.ts           # Firebase設定
+│   └── supabase.ts           # Supabase設定
 ├── types/index.ts           # 型定義
 ├── hooks/
-│   ├── useAuth.ts           # 認証フック
-│   └── useLocation.ts       # 位置情報フック
-├── components/Map.tsx       # 地図コンポーネント
+│   ├── useAuth.tsx          # 認証フック
+│   ├── useLocation.ts       # 位置情報フック
+│   ├── useGame.tsx          # ゲーム状態フック
+│   ├── useMissions.tsx      # ミッションフック
+│   ├── useCapture.tsx       # 捕獲フック
+│   ├── useZones.tsx         # ゾーンフック
+│   └── useLocationHistory.tsx  # 位置履歴フック ⭐️ NEW
+├── components/
+│   ├── Map.tsx              # 地図コンポーネント
+│   ├── GameControls.tsx     # ゲーム制御
+│   ├── MissionManager.tsx   # ミッション管理
+│   ├── ZoneManager.tsx      # ゾーン管理
+│   ├── GameStats.tsx        # ゲーム統計 ⭐️ NEW
+│   └── ReplayViewer.tsx     # リプレイビューア ⭐️ NEW
 ├── app/
 │   ├── layout.tsx           # 共通レイアウト
 │   ├── page.tsx            # ランディング
 │   ├── runner/page.tsx     # 逃走者UI
 │   ├── chaser/page.tsx     # 鬼UI
-│   └── gamemaster/page.tsx # GM UI
+│   └── gamemaster/page.tsx # GM UI（統計・リプレイ統合済み） ⭐️ 更新
 └── public/
     ├── manifest.json        # PWAマニフェスト
     └── sw.js               # Service Worker
@@ -156,7 +195,7 @@ tag-support/ (20ファイル作成)
 ## テスト状況
 
 ### 自動テスト環境 ✅
-- [x] **ユニットテスト (Vitest)** - 61/61テスト成功（100%） ⭐️ 更新
+- [x] **ユニットテスト (Vitest)** - 70/70テスト成功（100%） ⭐️ 更新
   - lib/supabase.ts: 4/4テスト成功（環境変数フォールバック対応）
   - hooks/useLocation.ts: 8/8テスト成功
   - hooks/useAuth.tsx: 9/9テスト成功 (Supabaseベースに修正)
@@ -164,6 +203,7 @@ tag-support/ (20ファイル作成)
   - hooks/useMissions.tsx: 13/13テスト成功 (Supabaseベースに修正)
   - hooks/useCapture.tsx: 8/8テスト成功
   - hooks/useZones.tsx: 9/9テスト成功（フィールド名修正対応）
+  - hooks/useLocationHistory.tsx: 9/9テスト成功 ⭐️ NEW
 - [x] **テスト品質向上** ⭐️ NEW
   - Firebase → Supabase への完全移行完了
   - 全テストがSupabaseのモックを使用
@@ -179,9 +219,9 @@ tag-support/ (20ファイル作成)
   - カバレッジレポート、トラブルシューティング追加
 
 ### 動作確認済み
-- [x] ローカル開発環境起動 ⭐️ 更新
-- [x] ビルドプロセス（npm run build成功） ⭐️ NEW
-- [x] 全テストスイート実行（61/61成功） ⭐️ NEW
+- [x] ローカル開発環境起動
+- [x] ビルドプロセス（npm run build成功）
+- [x] 全テストスイート実行（70/70成功） ⭐️ 更新
 - [ ] Firebase接続テスト
 - [ ] 認証フロー
 - [ ] 位置情報取得
@@ -197,22 +237,28 @@ tag-support/ (20ファイル作成)
 ## 次回セッションでの予定
 
 ### 優先度: 高
-1. **Supabase実環境セットアップ** ⭐️ 更新
-   - データベース設定
+1. **Supabaseデータベーススキーマ作成**
+   - location_historyテーブルの作成
+   - インデックス設定（user_id, game_id, timestamp）
+   - マイグレーションファイル作成
+2. **位置履歴の自動記録機能**
+   - useLocationフックとの統合
+   - 自動的な履歴保存機能
+   - パフォーマンス最適化（バッチ処理）
+3. **Supabase実環境セットアップ**
    - セキュリティルール設定
+   - RLS (Row Level Security) ポリシー
    - 実環境での動作確認
-2. **モバイル実機テスト**
+
+### 優先度: 中
+4. **モバイル実機テスト**
    - iOS/Android実機でのテスト
    - PWAインストールテスト
    - 位置情報精度確認
-3. **Push通知基礎実装**
+5. **Push通知基礎実装**
    - Web Push API統合
    - ゲームイベント通知
-
-### 優先度: 中
-4. **パフォーマンス最適化**
+6. **パフォーマンス最適化**
    - バンドルサイズ削減
    - 地図描画の最適化
-5. **リプレイ・ログ機能**
-   - 移動履歴の可視化
-   - ゲーム統計の表示
+   - リプレイデータの効率的な読み込み
