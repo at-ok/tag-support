@@ -1,283 +1,208 @@
-# テストガイド
+# テストドキュメント
 
-## 概要
+## テスト概要
 
-Tag Supportプロジェクトでは、高品質なコードを維持するために2種類のテストを実施しています。
+Tag Supportプロジェクトでは、高品質なコードを維持するために包括的なテスト戦略を採用しています。
 
-- **ユニットテスト**: Vitestを使用した単体テスト
-- **E2Eテスト**: Playwrightを使用したエンドツーエンドテスト
+## テストフレームワーク
 
-## テスト環境
+- **ユニットテスト**: Vitest + React Testing Library
+- **E2Eテスト**: Playwright
+- **カバレッジ**: @vitest/coverage-v8
+
+## テスト実行方法
+
+```bash
+# ユニットテスト実行
+npm test
+
+# ユニットテスト (UI付き)
+npm run test:ui
+
+# カバレッジ付きテスト実行
+npm test -- --coverage
+
+# E2Eテスト実行
+npm run test:e2e
+
+# E2Eテスト (UI付き)
+npm run test:e2e:ui
+
+# すべてのテストを実行
+npm test && npm run test:e2e
+```
+
+## テスト結果サマリー
 
 ### ユニットテスト (Vitest)
 
-- **フレームワーク**: Vitest
-- **テストライブラリ**: @testing-library/react
-- **環境**: jsdom
-- **設定ファイル**: `vitest.config.ts`
+**最終更新**: 2025-11-17
+
+- **総テスト数**: 41
+- **成功**: 41 (100%)
+- **失敗**: 0
+
+#### テストファイル別内訳
+
+| ファイル | テスト数 | 状態 |
+|---------|---------|------|
+| `lib/__tests__/supabase.test.ts` | 4 | ✅ |
+| `hooks/__tests__/useAuth.test.tsx` | 9 | ✅ |
+| `hooks/__tests__/useLocation.test.ts` | 8 | ✅ |
+| `hooks/__tests__/useGame.test.tsx` | 10 | ✅ |
+| `hooks/__tests__/useMissions.test.tsx` | 10 | ✅ |
+
+### コードカバレッジ
+
+| モジュール | カバレッジ | Branch | Functions | Lines |
+|-----------|-----------|---------|-----------|-------|
+| **hooks/** | **88.99%** | 74.48% | 100% | 88.99% |
+| `useAuth.tsx` | 97.01% | 83.33% | 100% | 97.01% |
+| `useLocation.ts` | 97.14% | 84.61% | 100% | 97.14% |
+| `useGame.tsx` | 79.45% | 57.14% | 100% | 79.45% |
+| `useMissions.tsx` | 90.84% | 79.48% | 100% | 90.84% |
+| **lib/** | **48.64%** | 50% | 0% | 48.64% |
+| `supabase.ts` | 100% | 100% | 100% | 100% |
 
 ### E2Eテスト (Playwright)
 
-- **フレームワーク**: Playwright
-- **対応ブラウザ**: Chromium, Mobile Chrome, Mobile Safari
-- **設定ファイル**: `playwright.config.ts`
+E2Eテストは以下の項目をカバーしています：
 
-## テストの実行
-
-### ユニットテスト
-
-```bash
-# 全ユニットテストを実行
-npm run test
-
-# ウォッチモードで実行
-npm run test -- --watch
-
-# UI付きで実行
-npm run test:ui
-
-# カバレッジレポート付きで実行
-npm run test -- --coverage
-```
-
-### E2Eテスト
-
-```bash
-# 全E2Eテストを実行
-npm run test:e2e
-
-# UI付きで実行
-npm run test:e2e:ui
-
-# 特定のブラウザで実行
-npm run test:e2e -- --project=chromium
-npm run test:e2e -- --project="Mobile Chrome"
-npm run test:e2e -- --project="Mobile Safari"
-
-# デバッグモードで実行
-npm run test:e2e -- --debug
-```
-
-### すべてのテストを実行
-
-```bash
-npm run test && npm run test:e2e
-```
-
-## テスト構成
-
-### ユニットテスト
-
-```
-lib/
-└── __tests__/
-    └── supabase.test.ts          # Supabaseクライアントのテスト
-
-hooks/
-└── __tests__/
-    ├── useAuth.test.tsx          # 認証フックのテスト
-    └── useLocation.test.ts       # 位置情報フックのテスト
-```
-
-### E2Eテスト
-
-```
-tests/
-└── e2e/
-    ├── example.spec.ts           # ホームページのテスト
-    └── role-pages.spec.ts        # 役職別ページのテスト
-```
-
-## テストカバレッジ
-
-### ユニットテスト
-
-| ファイル | カバレッジ対象 |
-|---------|--------------|
-| `lib/supabase.ts` | ✅ 環境変数チェック、クライアント初期化 |
-| `hooks/useAuth.tsx` | ✅ サインイン、サインアウト、状態管理 |
-| `hooks/useLocation.ts` | ✅ 位置情報追跡、エラーハンドリング |
-
-### E2Eテスト
-
-| テストケース | カバレッジ対象 |
-|------------|--------------|
-| ホームページ | ✅ ページ読み込み、基本ナビゲーション |
-| 逃走者ページ | ✅ ページ読み込み、レスポンシブ対応 |
-| 鬼ページ | ✅ ページ読み込み、UI表示 |
-| ゲームマスターページ | ✅ ページ読み込み、管理機能UI |
-| パフォーマンス | ✅ ページ読み込み時間（5秒以内） |
+- ホームページの読み込み
+- 役職別ページ（逃走者・鬼・ゲームマスター）の読み込み
+- レスポンシブデザインの動作確認
+- ページ間のナビゲーション
+- パフォーマンス測定（5秒以内の読み込み）
 
 ## テスト戦略
 
-### ユニットテスト戦略
+### ユニットテスト
 
-1. **フックのテスト**
-   - 各フックの正常系・異常系をテスト
-   - 外部依存（Firebase、Geolocation API）をモック化
-   - 状態変化を適切にテスト
+#### 1. フック (Hooks)
 
-2. **ライブラリのテスト**
-   - 環境変数の検証
-   - エラーハンドリング
-   - クライアント初期化
+各カスタムフックは以下の観点でテストされています：
 
-3. **コンポーネントのテスト** (今後追加予定)
-   - レンダリングテスト
-   - ユーザーインタラクションテスト
-   - プロパティのバリデーション
+- **初期状態**: 正しい初期値が設定されているか
+- **成功ケース**: 正常系の動作が期待通りか
+- **エラーハンドリング**: エラーケースが適切に処理されるか
+- **権限チェック**: 適切な権限チェックが行われているか
+- **状態更新**: 状態が正しく更新されるか
 
-### E2Eテスト戦略
+#### 2. ライブラリ初期化
 
-1. **ページ読み込みテスト**
-   - 各ページが正常に読み込まれることを確認
-   - 必須要素の表示確認
+- **環境変数チェック**: 必要な環境変数が存在するか
+- **クライアント初期化**: 正しく初期化されるか
 
-2. **レスポンシブテスト**
-   - モバイルデバイスでの表示確認
-   - 異なる画面サイズでの動作確認
+### E2Eテスト
 
-3. **パフォーマンステスト**
-   - ページ読み込み時間の計測
-   - パフォーマンス基準（5秒以内）の遵守
+#### 1. ページロード
 
-4. **ナビゲーションテスト**
-   - ページ間の遷移確認
-   - URLの正確性確認
+- 各役職ページが正常に読み込まれるか
+- 必要な要素が表示されるか
 
-## モック化とテストデータ
+#### 2. レスポンシブデザイン
 
-### Firebaseのモック化
+- モバイルビューポート (375x667) で正しく表示されるか
+
+#### 3. パフォーマンス
+
+- ページ読み込みが5秒以内に完了するか
+
+## テストカバレッジ目標
+
+- **フック**: 85%以上 ✅ (現在: 88.99%)
+- **ライブラリ**: 90%以上 (現在: 48.64% - firebase.tsは実際の環境でのみテスト)
+- **コンポーネント**: 70%以上 (今後実装予定)
+
+## テストのベストプラクティス
+
+### 1. テストの命名
 
 ```typescript
-vi.mock('@/lib/firebase', () => ({
-  auth: {},
-  db: {},
-}));
+// Good
+it('should create a game as gamemaster', async () => { ... });
 
-vi.mock('firebase/auth', () => ({
-  onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...args),
-  signInAnonymously: (...args: unknown[]) => mockSignInAnonymously(...args),
-}));
+// Bad
+it('test1', async () => { ... });
 ```
 
-### Geolocation APIのモック化
+### 2. モックの使用
 
 ```typescript
-const mockGeolocation = {
-  watchPosition: vi.fn(),
-  clearWatch: vi.fn(),
-};
+// 依存関係は適切にモックする
+vi.mock('../useAuth');
+vi.mock('@/lib/firebase');
+```
 
-Object.defineProperty(global.navigator, 'geolocation', {
-  writable: true,
-  value: mockGeolocation,
+### 3. 非同期処理
+
+```typescript
+// act()とwaitFor()を適切に使用
+await act(async () => {
+  await result.current.startGame();
+});
+
+await waitFor(() => {
+  expect(mockUpdateDoc).toHaveBeenCalled();
 });
 ```
 
-### 環境変数のモック化
+### 4. アサーション
 
 ```typescript
-beforeEach(() => {
-  vi.resetModules();
-  process.env = { ...originalEnv };
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+// 具体的なアサーションを使用
+expect(result.current.game).toMatchObject({
+  status: 'active',
+  duration: 3600,
 });
 ```
 
 ## CI/CD統合
 
-GitHub Actionsでのテスト実行は、`.github/workflows/ci.yml`で設定されています。
+GitHub Actionsを使用して、プルリクエスト時に自動的にテストを実行します。
 
-プッシュやプルリクエスト時に自動的に以下が実行されます：
-- 型チェック
-- Lintチェック
-- ユニットテスト
-- E2Eテスト（Chromiumのみ）
-
-## ベストプラクティス
-
-### テスト作成時の注意点
-
-1. **外部依存のモック化**
-   - Firebase、Supabase、Geolocation APIなど外部サービスは必ずモック化
-   - 実際のAPIコールは避ける
-
-2. **テストの独立性**
-   - 各テストケースは独立して実行可能にする
-   - beforeEach/afterEachでクリーンアップを適切に実施
-
-3. **わかりやすいテスト名**
-   - "should ..." の形式でテストの内容を明確に記述
-   - 日本語コメントで補足説明を追加
-
-4. **エッジケースのカバー**
-   - 正常系だけでなく異常系も必ずテスト
-   - エラーハンドリングの動作確認
-
-5. **パフォーマンス考慮**
-   - テストは高速に実行できるように設計
-   - 不要な待機時間を避ける
-
-### テストの追加方法
-
-1. **新しいユニットテストを追加する場合**
-
-```bash
-# テスト対象のファイルと同じディレクトリに__tests__フォルダを作成
-mkdir -p path/to/module/__tests__
-
-# テストファイルを作成（拡張子は.test.tsまたは.test.tsx）
-touch path/to/module/__tests__/filename.test.ts
+```yaml
+# .github/workflows/test.yml
+- name: Run tests
+  run: npm test
 ```
 
-2. **新しいE2Eテストを追加する場合**
+## 今後の改善計画
 
-```bash
-# tests/e2eディレクトリにテストファイルを作成（拡張子は.spec.ts）
-touch tests/e2e/new-feature.spec.ts
-```
+- [ ] コンポーネントテストの追加 (Map, GameControls, MissionManager)
+- [ ] E2Eテストの拡充（実際のユーザーフローのシミュレーション）
+- [ ] ビジュアルリグレッションテストの導入
+- [ ] パフォーマンステストの自動化
+- [ ] カバレッジレポートの自動生成とバッジ表示
 
 ## トラブルシューティング
 
-### ユニットテストが失敗する場合
+### よくある問題
 
-1. **モックが適切に設定されているか確認**
-   - `vi.mock()`の呼び出し位置
-   - モック関数の戻り値
+#### 1. "act(...) not configured" 警告
 
-2. **非同期処理の待機**
-   - `await waitFor()`を使用
-   - `act()`で状態更新をラップ
+これは現在の環境設定によるもので、テストの動作には影響しません。
 
-3. **環境変数の設定**
-   - `beforeEach`で適切に設定されているか確認
+#### 2. "Multiple GoTrueClient instances" 警告
 
-### E2Eテストが失敗する場合
+Supabaseクライアントが複数回初期化される場合に表示されますが、テストには影響しません。
 
-1. **開発サーバーが起動しているか確認**
-   - Playwrightは自動的に起動しますが、ポートが使用中の場合は失敗します
+### デバッグ方法
 
-2. **セレクタの確認**
-   - ページの実装変更に合わせてセレクタを更新
+```bash
+# UIモードでテストをデバッグ
+npm run test:ui
 
-3. **タイムアウトの調整**
-   - 重いページの場合、タイムアウトを延長
+# 特定のテストファイルのみ実行
+npm test -- useAuth.test.tsx
 
-## 今後の改善予定
+# カバレッジレポートをブラウザで確認
+npm test -- --coverage
+# coverage/index.html を開く
+```
 
-- [ ] テストカバレッジの向上（目標: 80%以上）
-- [ ] コンポーネントのユニットテスト追加
-- [ ] ビジュアルリグレッションテストの導入
-- [ ] パフォーマンステストの拡充
-- [ ] アクセシビリティテストの追加
-- [ ] テストレポートの自動生成
-- [ ] CI/CDでのカバレッジレポート表示
-
-## 参考資料
+## 参考リンク
 
 - [Vitest公式ドキュメント](https://vitest.dev/)
+- [React Testing Library](https://testing-library.com/react)
 - [Playwright公式ドキュメント](https://playwright.dev/)
-- [React Testing Library公式ドキュメント](https://testing-library.com/react)
-- [Testing Best Practices](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
