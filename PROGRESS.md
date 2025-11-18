@@ -118,18 +118,27 @@ tag-support/ (20ファイル作成)
 ## テスト状況
 
 ### 自動テスト環境 ✅
-- [x] **ユニットテスト (Vitest)** - 21/21テスト成功（100%）
+- [x] **ユニットテスト (Vitest)** - 41/41テスト成功（100%）
   - lib/supabase.ts: 4/4テスト成功
   - hooks/useLocation.ts: 8/8テスト成功
   - hooks/useAuth.tsx: 9/9テスト成功
+  - hooks/useGame.tsx: 10/10テスト成功 ⭐️ NEW
+  - hooks/useMissions.tsx: 10/10テスト成功 ⭐️ NEW
+- [x] **コードカバレッジ** - 88.99% (hooks/)
+  - useAuth.tsx: 97.01%
+  - useLocation.ts: 97.14%
+  - useGame.tsx: 79.45%
+  - useMissions.tsx: 90.84%
+  - supabase.ts: 100%
 - [x] **E2Eテスト (Playwright)**
   - ホームページテスト
   - 役職別ページテスト（逃走者・鬼・ゲームマスター）
   - レスポンシブ対応テスト
   - パフォーマンステスト
 - [x] **テストドキュメント**
-  - docs/TESTING.md 作成
+  - docs/TESTING.md 作成 ⭐️ 更新
   - テスト戦略、実行方法、ベストプラクティス記載
+  - カバレッジレポート、トラブルシューティング追加
 
 ### 動作確認済み
 - [ ] ローカル開発環境起動
