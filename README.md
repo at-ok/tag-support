@@ -135,11 +135,22 @@ npm run test:ui           # ユニットテスト UI
 npm run test:e2e          # E2Eテスト (Playwright)
 npm run test:e2e:ui       # E2Eテスト UI
 
+# テストカバレッジ
+npm test -- --coverage    # カバレッジレポート生成
+
 # コード品質
 npm run lint              # ESLint
 npm run format            # Prettier フォーマット
 npm run format:check      # フォーマットチェック
 ```
+
+## テスト状況
+
+- **ユニットテスト**: 41/41 成功 (100%) ✅
+- **コードカバレッジ**: 88.99% (hooks/) ✅
+- **E2Eテスト**: 実装済み ✅
+
+詳細は [docs/TESTING.md](docs/TESTING.md) を参照してください。
 
 ## ライセンス
 
