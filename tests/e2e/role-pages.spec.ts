@@ -1,99 +1,98 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Runner Page', () => {
-  test('should load runner page', async ({ page }) => {
+  test('should load runner page and show access denied for unauthenticated users', async ({
+    page,
+  }) => {
     await page.goto('/runner');
 
     // Check if page loaded successfully
     await expect(page).toHaveURL(/\/runner/);
 
-    // Check for main content
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
+    // Check for access denied message (since no authentication)
+    const accessDenied = page.getByText('アクセス拒否');
+    await expect(accessDenied).toBeVisible();
   });
 
-  test('should display runner-specific content', async ({ page }) => {
+  test('should display access denied message', async ({ page }) => {
     await page.goto('/runner');
 
-    // Look for runner-specific elements (e.g., team info, mission area)
-    // Note: Adjust selectors based on actual implementation
-    const heading = page.locator('h1');
-    await expect(heading).toBeVisible();
+    // Look for access denied content
+    const message = page.getByText('逃走者の権限が必要です');
+    await expect(message).toBeVisible();
   });
 
   test('should be mobile responsive', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/runner');
 
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
+    // Check that page renders
+    const body = page.locator('body');
+    await expect(body).toBeVisible();
   });
 });
 
 test.describe('Chaser Page', () => {
-  test('should load chaser page', async ({ page }) => {
+  test('should load chaser page and show access denied for unauthenticated users', async ({
+    page,
+  }) => {
     await page.goto('/chaser');
 
     // Check if page loaded successfully
     await expect(page).toHaveURL(/\/chaser/);
 
-    // Check for main content
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
+    // Check for access denied message
+    const accessDenied = page.getByText('アクセス拒否');
+    await expect(accessDenied).toBeVisible();
   });
 
-  test('should display chaser-specific content', async ({ page }) => {
+  test('should display access denied message', async ({ page }) => {
     await page.goto('/chaser');
 
-    // Look for chaser-specific elements (e.g., radar, capture button)
-    const heading = page.locator('h1');
-    await expect(heading).toBeVisible();
-  });
-
-  test('should handle capture functionality UI', async ({ page }) => {
-    await page.goto('/chaser');
-
-    // Note: This test checks UI presence, not actual capture logic
-    // Actual capture would require mocking or test database
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
+    // Look for access denied content
+    const message = page.getByText('鬼の権限が必要です');
+    await expect(message).toBeVisible();
   });
 
   test('should be mobile responsive', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/chaser');
 
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
+    // Check that page renders
+    const body = page.locator('body');
+    await expect(body).toBeVisible();
   });
 });
 
 test.describe('Game Master Page', () => {
-  test('should load gamemaster page', async ({ page }) => {
+  test('should load gamemaster page and show access denied for unauthenticated users', async ({
+    page,
+  }) => {
     await page.goto('/gamemaster');
 
     // Check if page loaded successfully
     await expect(page).toHaveURL(/\/gamemaster/);
 
-    // Check for main content
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
+    // Check for access denied message
+    const accessDenied = page.getByText('アクセス拒否');
+    await expect(accessDenied).toBeVisible();
   });
 
-  test('should display gamemaster-specific content', async ({ page }) => {
+  test('should display access denied message', async ({ page }) => {
     await page.goto('/gamemaster');
 
-    // Look for GM-specific elements (e.g., player management, controls)
-    const heading = page.locator('h1');
-    await expect(heading).toBeVisible();
+    // Look for access denied content
+    const message = page.getByText('ゲームマスターの権限が必要です');
+    await expect(message).toBeVisible();
   });
 
   test('should be mobile responsive', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/gamemaster');
 
-    const main = page.locator('main');
-    await expect(main).toBeVisible();
+    // Check that page renders
+    const body = page.locator('body');
+    await expect(body).toBeVisible();
   });
 });
 

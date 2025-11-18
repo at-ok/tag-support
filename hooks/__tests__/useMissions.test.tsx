@@ -77,7 +77,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: null,
       error: null,
-      accuracy: 0,
       isTracking: false,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -353,7 +352,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -408,7 +406,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -461,7 +458,6 @@ describe('useMissions', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -481,7 +477,7 @@ describe('useMissions', () => {
 
     // Should not have called update for completion
     // (the update mock might be called 0 times or only for other reasons)
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify mission is not completed
     expect(result.current.missions[0]?.completed).toBe(false);
@@ -545,9 +541,9 @@ describe('useMissions', () => {
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
       expect(result.current.missions).toHaveLength(3);
-      expect(result.current.missions[0].type).toBe('area');
-      expect(result.current.missions[1].type).toBe('escape');
-      expect(result.current.missions[2].type).toBe('rescue');
+      expect(result.current.missions[0]!.type).toBe('area');
+      expect(result.current.missions[1]!.type).toBe('escape');
+      expect(result.current.missions[2]!.type).toBe('rescue');
     });
   });
 });

@@ -20,7 +20,7 @@ export const db = getFirestore(app);
 export const functions = getFunctions(app, 'asia-northeast1');
 
 export const getMessagingInstance = async () => {
-  if (typeof window !== 'undefined' && await isSupported()) {
+  if (typeof window !== 'undefined' && (await isSupported())) {
     return getMessaging(app);
   }
   return null;

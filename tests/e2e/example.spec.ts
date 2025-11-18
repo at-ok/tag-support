@@ -7,10 +7,14 @@ test('homepage loads successfully', async ({ page }) => {
   await expect(page).toHaveTitle(/Tag Support/i);
 });
 
-test('has basic navigation', async ({ page }) => {
+test('has basic content', async ({ page }) => {
   await page.goto('/');
 
-  // Check for main content
-  const main = page.locator('main');
-  await expect(main).toBeVisible();
+  // Check for heading
+  const heading = page.getByRole('heading', { name: /リアル鬼ごっこ/i });
+  await expect(heading).toBeVisible();
+
+  // Check for login form
+  const nicknameInput = page.getByPlaceholder(/ニックネームを入力/i);
+  await expect(nicknameInput).toBeVisible();
 });

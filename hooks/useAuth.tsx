@@ -51,11 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
 
       if (error) throw error;
 
@@ -66,7 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           nickname: row.nickname,
           role: row.role as UserRole,
           team: row.team_id || undefined,
-          status: row.status === 'captured' ? 'captured' : row.status === 'offline' ? 'safe' : 'active',
+          status:
+            row.status === 'captured' ? 'captured' : row.status === 'offline' ? 'safe' : 'active',
           lastUpdated: new Date(row.updated_at),
           captureCount: 0,
         });
@@ -97,15 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!authData.user) throw new Error('No user returned from sign up');
 
       // Create user record
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          nickname,
-          role: role === 'special' ? 'gamemaster' : role,
-          team_id: team || null,
-          status: 'active',
-        } as any);
+      const { error: insertError } = await supabase.from('users').insert({
+        id: authData.user.id,
+        nickname,
+        role: role === 'special' ? 'gamemaster' : role,
+        team_id: team || null,
+        status: 'active',
+      } as any);
 
       if (insertError) throw insertError;
 

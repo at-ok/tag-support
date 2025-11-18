@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useLocationHistory, type LocationHistoryEntry } from '@/hooks/useLocationHistory';
+import { useLocationHistory } from '@/hooks/useLocationHistory';
 
 interface ReplayViewerProps {
   userId: string;
@@ -73,48 +73,48 @@ export default function ReplayViewer({ userId, gameId, isGameMaster = false }: R
 
   return (
     <div className="card-mobile">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-600 rounded-lg flex items-center justify-center">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-pink-500 to-rose-600">
           <span className="text-xl">🎬</span>
         </div>
-        <h3 className="font-bold text-lg text-slate-800">リプレイビューア</h3>
+        <h3 className="text-lg font-bold text-slate-800">リプレイビューア</h3>
       </div>
 
       {loading ? (
-        <div className="text-center py-8">
-          <div className="w-12 h-12 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center animate-pulse">
+        <div className="py-8 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 animate-pulse items-center justify-center rounded-full bg-slate-100">
             <span className="text-2xl">⏳</span>
           </div>
-          <p className="text-slate-500 text-sm">履歴を読み込み中...</p>
+          <p className="text-sm text-slate-500">履歴を読み込み中...</p>
         </div>
       ) : history.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="w-12 h-12 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+        <div className="py-8 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
             <span className="text-2xl opacity-50">🎬</span>
           </div>
-          <p className="text-slate-500 text-sm">位置履歴データがありません</p>
+          <p className="text-sm text-slate-500">位置履歴データがありません</p>
         </div>
       ) : (
         <div className="space-y-4">
           {/* Current position info */}
           {currentEntry && (
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-blue-50 p-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-slate-600 mb-1">時刻</p>
+                  <p className="mb-1 text-xs text-slate-600">時刻</p>
                   <p className="text-sm font-semibold text-slate-800">
                     {formatTime(currentEntry.timestamp)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-600 mb-1">位置</p>
-                  <p className="text-xs font-mono text-slate-800">
+                  <p className="mb-1 text-xs text-slate-600">位置</p>
+                  <p className="font-mono text-xs text-slate-800">
                     {currentEntry.location.lat.toFixed(6)}, {currentEntry.location.lng.toFixed(6)}
                   </p>
                 </div>
                 {currentEntry.speed !== undefined && (
                   <div>
-                    <p className="text-xs text-slate-600 mb-1">速度</p>
+                    <p className="mb-1 text-xs text-slate-600">速度</p>
                     <p className="text-sm font-semibold text-slate-800">
                       {(currentEntry.speed * 3.6).toFixed(1)} km/h
                     </p>
@@ -122,7 +122,7 @@ export default function ReplayViewer({ userId, gameId, isGameMaster = false }: R
                 )}
                 {currentEntry.heading !== undefined && (
                   <div>
-                    <p className="text-xs text-slate-600 mb-1">方向</p>
+                    <p className="mb-1 text-xs text-slate-600">方向</p>
                     <p className="text-sm font-semibold text-slate-800">
                       {currentEntry.heading.toFixed(0)}°
                     </p>
@@ -135,10 +135,12 @@ export default function ReplayViewer({ userId, gameId, isGameMaster = false }: R
           {/* Progress bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-slate-600">
-              <span>{currentIndex + 1} / {history.length}</span>
+              <span>
+                {currentIndex + 1} / {history.length}
+              </span>
               <span>{Math.round(progress)}%</span>
             </div>
-            <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div className="relative h-2 overflow-hidden rounded-full bg-slate-200">
               <div
                 className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -151,7 +153,7 @@ export default function ReplayViewer({ userId, gameId, isGameMaster = false }: R
               max={history.length - 1}
               value={currentIndex}
               onChange={(e) => handleSeek(Number(e.target.value))}
-              className="w-full h-2 bg-transparent cursor-pointer appearance-none"
+              className="h-2 w-full cursor-pointer appearance-none bg-transparent"
               style={{
                 WebkitAppearance: 'none',
                 background: 'transparent',
@@ -164,22 +166,19 @@ export default function ReplayViewer({ userId, gameId, isGameMaster = false }: R
             <div className="flex gap-2">
               <button
                 onClick={handleReset}
-                className="flex-1 btn-secondary text-sm py-2"
+                className="btn-secondary flex-1 py-2 text-sm"
                 disabled={currentIndex === 0}
               >
                 ⏮️ リセット
               </button>
               {isPlaying ? (
-                <button
-                  onClick={handlePause}
-                  className="flex-1 btn-warning text-sm py-2"
-                >
+                <button onClick={handlePause} className="btn-warning flex-1 py-2 text-sm">
                   ⏸️ 一時停止
                 </button>
               ) : (
                 <button
                   onClick={handlePlay}
-                  className="flex-1 btn-success text-sm py-2"
+                  className="btn-success flex-1 py-2 text-sm"
                   disabled={currentIndex >= history.length - 1}
                 >
                   ▶️ 再生
@@ -189,15 +188,15 @@ export default function ReplayViewer({ userId, gameId, isGameMaster = false }: R
 
             {/* Playback speed */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-600 font-medium">再生速度:</span>
-              <div className="flex gap-1 flex-1">
+              <span className="text-xs font-medium text-slate-600">再生速度:</span>
+              <div className="flex flex-1 gap-1">
                 {[1, 2, 4, 8].map((speed) => (
                   <button
                     key={speed}
                     onClick={() => setPlaybackSpeed(speed)}
-                    className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                       playbackSpeed === speed
-                        ? 'bg-blue-500 text-white elevation-2'
+                        ? 'elevation-2 bg-blue-500 text-white'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
@@ -210,34 +209,38 @@ export default function ReplayViewer({ userId, gameId, isGameMaster = false }: R
 
           {/* Timeline */}
           <div className="border-t border-slate-200 pt-3">
-            <h4 className="text-xs font-semibold text-slate-700 mb-2">タイムライン</h4>
-            <div className="max-h-40 overflow-y-auto space-y-1">
-              {history.slice(Math.max(0, currentIndex - 2), Math.min(history.length, currentIndex + 3)).map((entry, idx) => {
-                const actualIdx = Math.max(0, currentIndex - 2) + idx;
-                const isCurrent = actualIdx === currentIndex;
-                return (
-                  <button
-                    key={entry.id}
-                    onClick={() => handleSeek(actualIdx)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
-                      isCurrent
-                        ? 'bg-blue-100 border border-blue-300 font-semibold'
-                        : 'bg-slate-50 hover:bg-slate-100 border border-slate-200'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className={isCurrent ? 'text-blue-700' : 'text-slate-700'}>
-                        {formatTime(entry.timestamp)}
-                      </span>
-                      {entry.speed !== undefined && (
-                        <span className={`font-mono ${isCurrent ? 'text-blue-600' : 'text-slate-500'}`}>
-                          {(entry.speed * 3.6).toFixed(1)} km/h
+            <h4 className="mb-2 text-xs font-semibold text-slate-700">タイムライン</h4>
+            <div className="max-h-40 space-y-1 overflow-y-auto">
+              {history
+                .slice(Math.max(0, currentIndex - 2), Math.min(history.length, currentIndex + 3))
+                .map((entry, idx) => {
+                  const actualIdx = Math.max(0, currentIndex - 2) + idx;
+                  const isCurrent = actualIdx === currentIndex;
+                  return (
+                    <button
+                      key={entry.id}
+                      onClick={() => handleSeek(actualIdx)}
+                      className={`w-full rounded-lg px-3 py-2 text-left text-xs transition-all ${
+                        isCurrent
+                          ? 'border border-blue-300 bg-blue-100 font-semibold'
+                          : 'border border-slate-200 bg-slate-50 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={isCurrent ? 'text-blue-700' : 'text-slate-700'}>
+                          {formatTime(entry.timestamp)}
                         </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+                        {entry.speed !== undefined && (
+                          <span
+                            className={`font-mono ${isCurrent ? 'text-blue-600' : 'text-slate-500'}`}
+                          >
+                            {(entry.speed * 3.6).toFixed(1)} km/h
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           </div>
         </div>

@@ -91,19 +91,21 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
             captureTime: new Date(data.capture_time),
             verified: data.verified,
           };
-          setCaptures(prev => [newCapture, ...prev]);
+          setCaptures((prev) => [newCapture, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
           const data = payload.new;
-          setCaptures(prev => prev.map(c =>
-            c.id === data.id
-              ? {
-                  ...c,
-                  verified: data.verified,
-                }
-              : c
-          ));
+          setCaptures((prev) =>
+            prev.map((c) =>
+              c.id === data.id
+                ? {
+                    ...c,
+                    verified: data.verified,
+                  }
+                : c
+            )
+          );
         } else if (payload.eventType === 'DELETE') {
-          setCaptures(prev => prev.filter(c => c.id !== payload.old.id));
+          setCaptures((prev) => prev.filter((c) => c.id !== payload.old.id));
         }
       })
       .subscribe();
@@ -135,19 +137,16 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
         verified: false,
       };
 
-      const { error } = await (supabase
-        .from('captures')
-        .insert(insertPayload as never));
+      const { error } = await supabase.from('captures').insert(insertPayload as never);
 
       if (error) throw error;
 
       // Update runner status to captured
       const updatePayload: Record<string, unknown> = { status: 'captured' };
-      await (supabase
+      await supabase
         .from('users')
         .update(updatePayload as never)
-        .eq('id', runnerId));
-
+        .eq('id', runnerId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record capture');
       throw err;
@@ -167,11 +166,14 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       // Use PostGIS function to find nearby players
-      const { data: nearbyData, error: rpcError } = await supabase.rpc('nearby_players' as any, {
-        center_lat: location.lat,
-        center_lng: location.lng,
-        radius_meters: radiusMeters,
-      } as any);
+      const { data: nearbyData, error: rpcError } = await supabase.rpc(
+        'nearby_players' as any,
+        {
+          center_lat: location.lat,
+          center_lng: location.lng,
+          radius_meters: radiusMeters,
+        } as any
+      );
 
       if (rpcError) throw rpcError;
 
@@ -211,13 +213,15 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <CaptureContext.Provider value={{
-      captures,
-      loading,
-      error,
-      recordCapture,
-      getNearbyRunners,
-    }}>
+    <CaptureContext.Provider
+      value={{
+        captures,
+        loading,
+        error,
+        recordCapture,
+        getNearbyRunners,
+      }}
+    >
       {children}
     </CaptureContext.Provider>
   );

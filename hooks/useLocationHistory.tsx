@@ -111,13 +111,11 @@ export function useLocationHistory(options: UseLocationHistoryOptions = {}) {
 
     const lastEntry = entries[entries.length - 1];
     const firstEntry = entries[0];
-    const duration = lastEntry && firstEntry
-      ? lastEntry.timestamp.getTime() - firstEntry.timestamp.getTime()
-      : 0;
+    const duration =
+      lastEntry && firstEntry ? lastEntry.timestamp.getTime() - firstEntry.timestamp.getTime() : 0;
 
-    const averageSpeed = speeds.length > 0
-      ? speeds.reduce((sum, s) => sum + s, 0) / speeds.length
-      : 0;
+    const averageSpeed =
+      speeds.length > 0 ? speeds.reduce((sum, s) => sum + s, 0) / speeds.length : 0;
 
     setStats({
       totalDistance,
@@ -129,49 +127,52 @@ export function useLocationHistory(options: UseLocationHistoryOptions = {}) {
   }, []);
 
   // Record a location entry
-  const recordLocation = useCallback(async (location: Location, speed?: number, heading?: number) => {
-    if (!userId) {
-      throw new Error('User ID is required to record location');
-    }
-
-    try {
-      const insertPayload: Record<string, unknown> = {
-        user_id: userId,
-        game_id: gameId || null,
-        latitude: location.lat,
-        longitude: location.lng,
-        timestamp: new Date().toISOString(),
-        speed: speed || null,
-        heading: heading || null,
-      };
-
-      const { error: insertError } = await supabase
-        .from('location_history')
-        .insert(insertPayload as never);
-
-      if (insertError) throw insertError;
-
-      // Optionally refetch to update local state
-      if (autoTrack) {
-        await fetchHistory();
+  const recordLocation = useCallback(
+    async (location: Location, speed?: number, heading?: number) => {
+      if (!userId) {
+        throw new Error('User ID is required to record location');
       }
-    } catch (err) {
-      console.error('Error recording location:', err);
-      throw err;
-    }
-  }, [userId, gameId, autoTrack, fetchHistory]);
+
+      try {
+        const insertPayload: Record<string, unknown> = {
+          user_id: userId,
+          game_id: gameId || null,
+          latitude: location.lat,
+          longitude: location.lng,
+          timestamp: new Date().toISOString(),
+          speed: speed || null,
+          heading: heading || null,
+        };
+
+        const { error: insertError } = await supabase
+          .from('location_history')
+          .insert(insertPayload as never);
+
+        if (insertError) throw insertError;
+
+        // Optionally refetch to update local state
+        if (autoTrack) {
+          await fetchHistory();
+        }
+      } catch (err) {
+        console.error('Error recording location:', err);
+        throw err;
+      }
+    },
+    [userId, gameId, autoTrack, fetchHistory]
+  );
 
   // Calculate distance between two points (Haversine formula)
   const calculateDistance = (pos1: Location, pos2: Location): number => {
     const R = 6371e3; // Earth's radius in meters
-    const φ1 = pos1.lat * Math.PI / 180;
-    const φ2 = pos2.lat * Math.PI / 180;
-    const Δφ = (pos2.lat - pos1.lat) * Math.PI / 180;
-    const Δλ = (pos2.lng - pos1.lng) * Math.PI / 180;
+    const φ1 = (pos1.lat * Math.PI) / 180;
+    const φ2 = (pos2.lat * Math.PI) / 180;
+    const Δφ = ((pos2.lat - pos1.lat) * Math.PI) / 180;
+    const Δλ = ((pos2.lng - pos1.lng) * Math.PI) / 180;
 
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) *
-      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c; // Distance in meters
@@ -182,10 +183,7 @@ export function useLocationHistory(options: UseLocationHistoryOptions = {}) {
     if (!userId) return;
 
     try {
-      let deleteQuery = supabase
-        .from('location_history')
-        .delete()
-        .eq('user_id', userId);
+      let deleteQuery = supabase.from('location_history').delete().eq('user_id', userId);
 
       if (gameId) {
         deleteQuery = deleteQuery.eq('game_id', gameId);

@@ -20,37 +20,40 @@ export function useLocation(updateInterval: number = 30000): UseLocationReturn {
   const [isTracking, setIsTracking] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
 
-  const updateLocationInDatabase = useCallback(async (loc: Location) => {
-    if (!user) return;
+  const updateLocationInDatabase = useCallback(
+    async (loc: Location) => {
+      if (!user) return;
 
-    try {
-      // Insert new location record
-      const insertPayload: Record<string, unknown> = {
-        user_id: user.id,
-        latitude: loc.lat,
-        longitude: loc.lng,
-        accuracy: loc.accuracy || null,
-        timestamp: loc.timestamp.toISOString(),
-      };
+      try {
+        // Insert new location record
+        const insertPayload: Record<string, unknown> = {
+          user_id: user.id,
+          latitude: loc.lat,
+          longitude: loc.lng,
+          accuracy: loc.accuracy || null,
+          timestamp: loc.timestamp.toISOString(),
+        };
 
-      const { error: insertError } = await (supabase
-        .from('player_locations')
-        .insert(insertPayload as never));
+        const { error: insertError } = await supabase
+          .from('player_locations')
+          .insert(insertPayload as never);
 
-      if (insertError) throw insertError;
+        if (insertError) throw insertError;
 
-      // Update user's last updated time
-      const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() };
-      const { error: updateError } = await (supabase
-        .from('users')
-        .update(updatePayload as never)
-        .eq('id', user.id));
+        // Update user's last updated time
+        const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        const { error: updateError } = await supabase
+          .from('users')
+          .update(updatePayload as never)
+          .eq('id', user.id);
 
-      if (updateError) throw updateError;
-    } catch (err) {
-      console.error('Failed to update location:', err);
-    }
-  }, [user]);
+        if (updateError) throw updateError;
+      } catch (err) {
+        console.error('Failed to update location:', err);
+      }
+    },
+    [user]
+  );
 
   const startTracking = useCallback(() => {
     if (!navigator.geolocation) {

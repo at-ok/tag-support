@@ -33,8 +33,14 @@ describe('useLocation', () => {
 
     // Mock useAuth hook
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: 'test-user-id', nickname: 'Test User', role: 'runner', status: 'active', lastUpdated: new Date() },
-      firebaseUser: null,
+      user: {
+        id: 'test-user-id',
+        nickname: 'Test User',
+        role: 'runner',
+        status: 'active',
+        lastUpdated: new Date(),
+      },
+      session: null,
       loading: false,
       error: null,
       signIn: vi.fn(),
@@ -55,7 +61,6 @@ describe('useLocation', () => {
   });
 
   it('should set error when geolocation is not supported', () => {
-    // @ts-expect-error - intentionally setting to undefined
     Object.defineProperty(global.navigator, 'geolocation', {
       writable: true,
       value: undefined,
@@ -105,8 +110,10 @@ describe('useLocation', () => {
         altitudeAccuracy: null,
         heading: null,
         speed: null,
+        toJSON: () => ({}),
       },
       timestamp: Date.now(),
+      toJSON: () => ({}),
     };
 
     // Call the position callback synchronously
@@ -115,9 +122,12 @@ describe('useLocation', () => {
     });
 
     // Wait for state update
-    await waitFor(() => {
-      expect(result.current.location).not.toBeNull();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(result.current.location).not.toBeNull();
+      },
+      { timeout: 3000 }
+    );
 
     expect(result.current.location).toMatchObject({
       lat: 35.6812,
@@ -154,9 +164,12 @@ describe('useLocation', () => {
     });
 
     // Wait for state update
-    await waitFor(() => {
-      expect(result.current.error).not.toBeNull();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(result.current.error).not.toBeNull();
+      },
+      { timeout: 3000 }
+    );
 
     expect(result.current.error).toBe('User denied geolocation');
     expect(result.current.isTracking).toBe(false);

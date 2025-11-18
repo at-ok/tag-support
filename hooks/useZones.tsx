@@ -11,7 +11,12 @@ interface ZoneContextType {
   restrictedZones: Zone[];
   loading: boolean;
   error: string | null;
-  createZone: (name: string, type: 'safe' | 'restricted', center: Location, radius: number) => Promise<void>;
+  createZone: (
+    name: string,
+    type: 'safe' | 'restricted',
+    center: Location,
+    radius: number
+  ) => Promise<void>;
   updateZone: (zoneId: string, updates: Partial<Omit<Zone, 'id'>>) => Promise<void>;
   deleteZone: (zoneId: string) => Promise<void>;
   isInSafeZone: (location: Location) => Promise<boolean>;
@@ -40,10 +45,7 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
     // Initial fetch
     const fetchZones = async () => {
       try {
-        const { data, error } = await supabase
-          .from('zones')
-          .select('*')
-          .eq('active', true);
+        const { data, error } = await supabase.from('zones').select('*').eq('active', true);
 
         if (error) throw error;
 
@@ -60,8 +62,8 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
             radius: z.radius_meters,
           }));
 
-          setSafeZones(mappedZones.filter(z => z.type === 'safe'));
-          setRestrictedZones(mappedZones.filter(z => z.type === 'restricted'));
+          setSafeZones(mappedZones.filter((z) => z.type === 'safe'));
+          setRestrictedZones(mappedZones.filter((z) => z.type === 'restricted'));
         }
         setLoading(false);
       } catch (err) {
@@ -93,31 +95,31 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
 
           if (data.active) {
             if (zone.type === 'safe') {
-              setSafeZones(prev => {
-                const existing = prev.find(z => z.id === zone.id);
+              setSafeZones((prev) => {
+                const existing = prev.find((z) => z.id === zone.id);
                 if (existing) {
-                  return prev.map(z => z.id === zone.id ? zone : z);
+                  return prev.map((z) => (z.id === zone.id ? zone : z));
                 }
                 return [...prev, zone];
               });
             } else {
-              setRestrictedZones(prev => {
-                const existing = prev.find(z => z.id === zone.id);
+              setRestrictedZones((prev) => {
+                const existing = prev.find((z) => z.id === zone.id);
                 if (existing) {
-                  return prev.map(z => z.id === zone.id ? zone : z);
+                  return prev.map((z) => (z.id === zone.id ? zone : z));
                 }
                 return [...prev, zone];
               });
             }
           } else {
             // If zone is deactivated, remove it
-            setSafeZones(prev => prev.filter(z => z.id !== data.id));
-            setRestrictedZones(prev => prev.filter(z => z.id !== data.id));
+            setSafeZones((prev) => prev.filter((z) => z.id !== data.id));
+            setRestrictedZones((prev) => prev.filter((z) => z.id !== data.id));
           }
         } else if (payload.eventType === 'DELETE') {
           const zoneId = payload.old.id;
-          setSafeZones(prev => prev.filter(z => z.id !== zoneId));
-          setRestrictedZones(prev => prev.filter(z => z.id !== zoneId));
+          setSafeZones((prev) => prev.filter((z) => z.id !== zoneId));
+          setRestrictedZones((prev) => prev.filter((z) => z.id !== zoneId));
         }
       })
       .subscribe();
@@ -151,9 +153,7 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
         active: true,
       };
 
-      const { error } = await (supabase
-        .from('zones')
-        .insert(insertPayload as never));
+      const { error } = await supabase.from('zones').insert(insertPayload as never);
 
       if (error) throw error;
     } catch (err) {
@@ -179,10 +179,10 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
         dbUpdates.center_lng = updates.center.lng;
       }
 
-      const { error } = await (supabase
+      const { error } = await supabase
         .from('zones')
         .update(dbUpdates as never)
-        .eq('id', zoneId));
+        .eq('id', zoneId);
 
       if (error) throw error;
     } catch (err) {
@@ -198,10 +198,7 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const { error } = await supabase
-        .from('zones')
-        .delete()
-        .eq('id', zoneId);
+      const { error } = await supabase.from('zones').delete().eq('id', zoneId);
 
       if (error) throw error;
     } catch (err) {
@@ -213,11 +210,14 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
   const isInSafeZone = async (location: Location): Promise<boolean> => {
     try {
       setError(null);
-      const { data, error } = await supabase.rpc('is_in_zone' as any, {
-        player_lat: location.lat,
-        player_lng: location.lng,
-        zone_type: 'safe',
-      } as any);
+      const { data, error } = await supabase.rpc(
+        'is_in_zone' as any,
+        {
+          player_lat: location.lat,
+          player_lng: location.lng,
+          zone_type: 'safe',
+        } as any
+      );
 
       if (error) throw error;
 
@@ -233,11 +233,14 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
   const isInRestrictedZone = async (location: Location): Promise<boolean> => {
     try {
       setError(null);
-      const { data, error } = await supabase.rpc('is_in_zone' as any, {
-        player_lat: location.lat,
-        player_lng: location.lng,
-        zone_type: 'restricted',
-      } as any);
+      const { data, error } = await supabase.rpc(
+        'is_in_zone' as any,
+        {
+          player_lat: location.lat,
+          player_lng: location.lng,
+          zone_type: 'restricted',
+        } as any
+      );
 
       if (error) throw error;
 
@@ -251,17 +254,19 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ZoneContext.Provider value={{
-      safeZones,
-      restrictedZones,
-      loading,
-      error,
-      createZone,
-      updateZone,
-      deleteZone,
-      isInSafeZone,
-      isInRestrictedZone,
-    }}>
+    <ZoneContext.Provider
+      value={{
+        safeZones,
+        restrictedZones,
+        loading,
+        error,
+        createZone,
+        updateZone,
+        deleteZone,
+        isInSafeZone,
+        isInRestrictedZone,
+      }}
+    >
       {children}
     </ZoneContext.Provider>
   );

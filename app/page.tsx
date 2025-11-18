@@ -20,7 +20,7 @@ export default function Home() {
     setIsSubmitting(true);
     try {
       await signIn(nickname.trim(), role, role === 'gamemaster' ? undefined : team);
-      
+
       switch (role) {
         case 'runner':
           router.push('/runner');
@@ -43,10 +43,10 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 font-medium">読み込み中...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          <p className="font-medium text-slate-600">読み込み中...</p>
         </div>
       </div>
     );
@@ -54,33 +54,37 @@ export default function Home() {
 
   if (user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
-        <div className="card-elevated max-w-md w-full">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto mb-4 flex items-center justify-center elevation-3">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+        <div className="card-elevated w-full max-w-md">
+          <div className="mb-6 text-center">
+            <div className="elevation-3 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600">
               <span className="text-3xl">👋</span>
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">おかえりなさい！</h1>
+            <h1 className="mb-2 text-2xl font-bold text-slate-800">おかえりなさい！</h1>
           </div>
 
-          <div className="space-y-4 mb-6">
-            <div className="bg-slate-50 rounded-xl p-4">
-              <p className="text-sm text-slate-600 mb-1">ニックネーム</p>
+          <div className="mb-6 space-y-4">
+            <div className="rounded-xl bg-slate-50 p-4">
+              <p className="mb-1 text-sm text-slate-600">ニックネーム</p>
               <p className="text-lg font-semibold text-slate-800">{user.nickname}</p>
             </div>
 
-            <div className="bg-slate-50 rounded-xl p-4">
-              <p className="text-sm text-slate-600 mb-1">役職</p>
+            <div className="rounded-xl bg-slate-50 p-4">
+              <p className="mb-1 text-sm text-slate-600">役職</p>
               <p className="text-lg font-semibold text-slate-800">
-                {user.role === 'runner' ? '🏃 逃走者' :
-                 user.role === 'chaser' ? '👹 鬼' :
-                 user.role === 'gamemaster' ? '🎮 ゲームマスター' : user.role}
+                {user.role === 'runner'
+                  ? '🏃 逃走者'
+                  : user.role === 'chaser'
+                    ? '👹 鬼'
+                    : user.role === 'gamemaster'
+                      ? '🎮 ゲームマスター'
+                      : user.role}
               </p>
             </div>
 
             {user.team && (
-              <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-sm text-slate-600 mb-1">チーム</p>
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="mb-1 text-sm text-slate-600">チーム</p>
                 <p className="text-lg font-semibold text-slate-800">チーム {user.team}</p>
               </div>
             )}
@@ -100,7 +104,7 @@ export default function Home() {
                   break;
               }
             }}
-            className="w-full btn-primary"
+            className="btn-primary w-full"
           >
             ゲームに参加
           </button>
@@ -110,26 +114,24 @@ export default function Home() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
-      <div className="card-elevated max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center elevation-4 transform hover:scale-105 transition-transform duration-200">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+      <div className="card-elevated w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="elevation-4 mx-auto mb-4 flex h-20 w-20 transform items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 transition-transform duration-200 hover:scale-105">
             <span className="text-4xl">🏃‍♂️</span>
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">リアル鬼ごっこ</h1>
+          <h1 className="mb-2 text-3xl font-bold text-slate-800">リアル鬼ごっこ</h1>
           <p className="text-slate-600">リアルタイム鬼ごっこサポートアプリ</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              ニックネーム
-            </label>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">ニックネーム</label>
             <input
               type="text"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              className="w-full input-touch"
+              className="input-touch w-full"
               placeholder="ニックネームを入力"
               required
               disabled={isSubmitting}
@@ -137,13 +139,11 @@ export default function Home() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              役職
-            </label>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">役職</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as UserRole)}
-              className="w-full input-touch"
+              className="input-touch w-full"
               disabled={isSubmitting}
             >
               <option value="runner">🏃 逃走者（逃げる人）</option>
@@ -154,13 +154,11 @@ export default function Home() {
 
           {role !== 'gamemaster' && (
             <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                チーム
-              </label>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">チーム</label>
               <select
                 value={team}
                 onChange={(e) => setTeam(e.target.value)}
-                className="w-full input-touch"
+                className="input-touch w-full"
                 disabled={isSubmitting}
               >
                 <option value="A">チーム A</option>
@@ -174,13 +172,13 @@ export default function Home() {
           <button
             type="submit"
             disabled={!nickname.trim() || isSubmitting}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="btn-primary w-full disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? '参加中...' : 'ゲームに参加'}
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+        <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4">
           <div className="flex items-center gap-2 text-sm text-blue-700">
             <span className="text-lg">📍</span>
             <span className="font-medium">位置情報の許可をお忘れなく！</span>

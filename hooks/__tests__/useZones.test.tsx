@@ -64,18 +64,17 @@ describe('useZones', () => {
     // Mock useAuth
     vi.mocked(useAuth).mockReturnValue({
       user: mockRunner,
+      session: null,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     // Mock useLocation
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -165,8 +164,8 @@ describe('useZones', () => {
 
     expect(result.current.safeZones).toHaveLength(1);
     expect(result.current.restrictedZones).toHaveLength(1);
-    expect(result.current.safeZones[0].id).toBe(mockSafeZone.id);
-    expect(result.current.restrictedZones[0].id).toBe(mockRestrictedZone.id);
+    expect(result.current.safeZones[0]!.id).toBe(mockSafeZone.id);
+    expect(result.current.restrictedZones[0]!.id).toBe(mockRestrictedZone.id);
   });
 
   it('should create a zone as gamemaster', async () => {
@@ -174,9 +173,9 @@ describe('useZones', () => {
       user: mockGameMaster,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      session: null,
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     const mockSelect = vi.fn().mockReturnThis();
@@ -265,9 +264,9 @@ describe('useZones', () => {
       user: mockGameMaster,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      session: null,
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     const mockSelect = vi.fn().mockReturnThis();
@@ -317,15 +316,17 @@ describe('useZones', () => {
   it('should check if player is in safe zone', async () => {
     const mockSelect = vi.fn().mockReturnThis();
     const mockEq = vi.fn().mockResolvedValue({
-      data: [{
-        id: mockSafeZone.id,
-        name: mockSafeZone.name,
-        type: mockSafeZone.type,
-        center_latitude: mockSafeZone.center.lat,
-        center_longitude: mockSafeZone.center.lng,
-        radius_meters: mockSafeZone.radius,
-        active: true,
-      }],
+      data: [
+        {
+          id: mockSafeZone.id,
+          name: mockSafeZone.name,
+          type: mockSafeZone.type,
+          center_latitude: mockSafeZone.center.lat,
+          center_longitude: mockSafeZone.center.lng,
+          radius_meters: mockSafeZone.radius,
+          active: true,
+        },
+      ],
       error: null,
     });
 
@@ -335,11 +336,13 @@ describe('useZones', () => {
     } as any);
 
     const mockRpc = vi.fn().mockResolvedValue({
-      data: [{
-        zone_id: mockSafeZone.id,
-        zone_name: mockSafeZone.name,
-        distance_meters: 50,
-      }],
+      data: [
+        {
+          zone_id: mockSafeZone.id,
+          zone_name: mockSafeZone.name,
+          distance_meters: 50,
+        },
+      ],
       error: null,
     });
     (supabase as any).rpc = mockRpc;
@@ -377,11 +380,13 @@ describe('useZones', () => {
     } as any);
 
     const mockRpc = vi.fn().mockResolvedValue({
-      data: [{
-        zone_id: mockRestrictedZone.id,
-        zone_name: mockRestrictedZone.name,
-        distance_meters: 30,
-      }],
+      data: [
+        {
+          zone_id: mockRestrictedZone.id,
+          zone_name: mockRestrictedZone.name,
+          distance_meters: 30,
+        },
+      ],
       error: null,
     });
     (supabase as any).rpc = mockRpc;
@@ -446,8 +451,8 @@ describe('useZones', () => {
           id: 'zone-3',
           name: 'New Safe Zone',
           type: 'safe',
-          center_latitude: 35.660000,
-          center_longitude: 139.750000,
+          center_latitude: 35.66,
+          center_longitude: 139.75,
           radius_meters: 120,
           active: true,
         },
@@ -458,7 +463,7 @@ describe('useZones', () => {
       expect(result.current.safeZones).toHaveLength(1);
     });
 
-    expect(result.current.safeZones[0].id).toBe('zone-3');
+    expect(result.current.safeZones[0]!.id).toBe('zone-3');
   });
 
   it('should throw error when used outside ZoneProvider', () => {

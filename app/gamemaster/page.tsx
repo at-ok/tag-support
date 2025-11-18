@@ -57,13 +57,17 @@ export default function GamemasterPage() {
     // Subscribe to real-time updates
     channel = supabase
       .channel('all_players_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'users',
-      }, () => {
-        fetchPlayers();
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'users',
+        },
+        () => {
+          fetchPlayers();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -76,13 +80,14 @@ export default function GamemasterPage() {
   const updatePlayerStatus = async (playerId: string, newStatus: string) => {
     try {
       const updatePayload: Record<string, unknown> = {
-        status: newStatus === 'captured' ? 'captured' : newStatus === 'offline' ? 'offline' : 'active',
-        updated_at: new Date().toISOString()
+        status:
+          newStatus === 'captured' ? 'captured' : newStatus === 'offline' ? 'offline' : 'active',
+        updated_at: new Date().toISOString(),
       };
-      const { error } = await (supabase
+      const { error } = await supabase
         .from('users')
         .update(updatePayload as never)
-        .eq('id', playerId));
+        .eq('id', playerId);
 
       if (error) throw error;
     } catch (error) {
@@ -94,16 +99,16 @@ export default function GamemasterPage() {
     try {
       const updates: Record<string, unknown> = {
         role: newRole,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
       if (newTeam) {
         updates.team_id = newTeam;
       }
 
-      const { error } = await (supabase
+      const { error } = await supabase
         .from('users')
         .update(updates as never)
-        .eq('id', playerId));
+        .eq('id', playerId);
 
       if (error) throw error;
     } catch (error) {
@@ -112,61 +117,75 @@ export default function GamemasterPage() {
   };
 
   if (!user || user.role !== 'gamemaster') {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h2 className="text-xl font-bold mb-2">アクセス拒否</h2>
-        <p>ゲームマスターの権限が必要です</p>
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="mb-2 text-xl font-bold">アクセス拒否</h2>
+          <p>ゲームマスターの権限が必要です</p>
+        </div>
       </div>
-    </div>;
+    );
   }
 
-  const runners = allPlayers.filter(p => p.role === 'runner');
-  const chasers = allPlayers.filter(p => p.role === 'chaser');
-  const activePlayers = allPlayers.filter(p => p.status === 'active');
-  const capturedPlayers = allPlayers.filter(p => p.status === 'captured');
+  const runners = allPlayers.filter((p) => p.role === 'runner');
+  const chasers = allPlayers.filter((p) => p.role === 'chaser');
+  const activePlayers = allPlayers.filter((p) => p.status === 'active');
+  const capturedPlayers = allPlayers.filter((p) => p.status === 'captured');
 
-  const mapCenter: [number, number] = allPlayers.find(p => p.location) 
-    ? [allPlayers.find(p => p.location)!.location!.lat, allPlayers.find(p => p.location)!.location!.lng]
+  const mapCenter: [number, number] = allPlayers.find((p) => p.location)
+    ? [
+        allPlayers.find((p) => p.location)!.location!.lat,
+        allPlayers.find((p) => p.location)!.location!.lng,
+      ]
     : [35.5522, 139.7797];
 
   return (
-    <div className="flex h-screen-mobile bg-gray-100 safe-area-top safe-area-bottom">
-      <div className="w-1/3 flex flex-col">
-        <header className="bg-green-600 text-white p-4">
+    <div className="h-screen-mobile safe-area-top safe-area-bottom flex bg-gray-100">
+      <div className="flex w-1/3 flex-col">
+        <header className="bg-green-600 p-4 text-white">
           <h1 className="text-xl font-bold">🎮 ゲームマスター</h1>
           <p className="text-sm">{user.nickname}</p>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
           <GameControls isGameMaster={true} />
-          
+
           <div className="card-mobile">
-            <h2 className="font-bold mb-3 flex items-center gap-2">
+            <h2 className="mb-3 flex items-center gap-2 font-bold">
               <span>📊</span>
               <span>ゲーム統計</span>
             </h2>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="bg-blue-50 p-2 rounded">
+              <div className="rounded bg-blue-50 p-2">
                 <p className="font-semibold">🏃 逃走者</p>
                 <p>合計 {runners.length}人</p>
-                <p className="text-green-600">逃走中 {runners.filter(r => r.status === 'active').length}人</p>
+                <p className="text-green-600">
+                  逃走中 {runners.filter((r) => r.status === 'active').length}人
+                </p>
               </div>
-              <div className="bg-red-50 p-2 rounded">
+              <div className="rounded bg-red-50 p-2">
                 <p className="font-semibold">👹 鬼</p>
                 <p>合計 {chasers.length}人</p>
-                <p className="text-blue-600">捕獲数 {chasers.reduce((sum, c) => sum + (c.captureCount || 0), 0)}人</p>
+                <p className="text-blue-600">
+                  捕獲数 {chasers.reduce((sum, c) => sum + (c.captureCount || 0), 0)}人
+                </p>
               </div>
             </div>
             {game && (
-              <div className="mt-3 pt-3 border-t">
+              <div className="mt-3 border-t pt-3">
                 <div className="flex justify-between text-sm">
                   <span>ゲーム状態:</span>
-                  <span className="font-bold">{
-                    game.status === 'waiting' ? '待機中' :
-                    game.status === 'active' ? '進行中' :
-                    game.status === 'paused' ? '一時停止' :
-                    game.status === 'finished' ? '終了' : game.status
-                  }</span>
+                  <span className="font-bold">
+                    {game.status === 'waiting'
+                      ? '待機中'
+                      : game.status === 'active'
+                        ? '進行中'
+                        : game.status === 'paused'
+                          ? '一時停止'
+                          : game.status === 'finished'
+                            ? '終了'
+                            : game.status}
+                  </span>
                 </div>
                 {game.startTime && game.status === 'active' && (
                   <div className="flex justify-between text-sm">
@@ -184,58 +203,71 @@ export default function GamemasterPage() {
 
           {game && <GameStats gameId={game.id} isGameMaster={true} />}
 
-          {selectedPlayer && <ReplayViewer userId={selectedPlayer.id} gameId={game?.id} isGameMaster={true} />}
+          {selectedPlayer && (
+            <ReplayViewer userId={selectedPlayer.id} gameId={game?.id} isGameMaster={true} />
+          )}
 
           <div className="card-mobile">
-            <h2 className="font-bold mb-3 flex items-center gap-2">
+            <h2 className="mb-3 flex items-center gap-2 font-bold">
               <span>👥</span>
               <span>アクティブプレイヤー</span>
-              <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold ml-auto">
+              <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
                 {activePlayers.length}
               </span>
             </h2>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {activePlayers.map(player => (
+            <div className="max-h-32 space-y-2 overflow-y-auto">
+              {activePlayers.map((player) => (
                 <div
                   key={player.id}
-                  className={`p-3 rounded-xl cursor-pointer transition-all ${
-                    selectedPlayer?.id === player.id ? 'bg-blue-100 elevation-2' : 'bg-slate-50 elevation-1 hover:elevation-2'
+                  className={`cursor-pointer rounded-xl p-3 transition-all ${
+                    selectedPlayer?.id === player.id
+                      ? 'elevation-2 bg-blue-100'
+                      : 'elevation-1 hover:elevation-2 bg-slate-50'
                   }`}
                   onClick={() => setSelectedPlayer(player)}
                 >
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-sm">{player.nickname}</span>
-                    <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
-                      player.role === 'runner' ? 'bg-blue-200 text-blue-800' : 'bg-red-200 text-red-800'
-                    }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">{player.nickname}</span>
+                    <span
+                      className={`rounded-lg px-2 py-1 text-xs font-medium ${
+                        player.role === 'runner'
+                          ? 'bg-blue-200 text-blue-800'
+                          : 'bg-red-200 text-red-800'
+                      }`}
+                    >
                       {player.role === 'runner' ? '🏃 逃走者' : '👹 鬼'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 mt-1">チーム {player.team}</p>
+                  <p className="mt-1 text-xs text-slate-600">チーム {player.team}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="card-mobile">
-            <h2 className="font-bold mb-3 flex items-center gap-2">
+            <h2 className="mb-3 flex items-center gap-2 font-bold">
               <span>🚨</span>
               <span>捕獲されたプレイヤー</span>
-              <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold ml-auto">
+              <span className="ml-auto rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
                 {capturedPlayers.length}
               </span>
             </h2>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
+            <div className="max-h-32 space-y-2 overflow-y-auto">
               {capturedPlayers.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-4">捕獲されたプレイヤーはいません</p>
+                <p className="py-4 text-center text-sm text-slate-500">
+                  捕獲されたプレイヤーはいません
+                </p>
               ) : (
-                capturedPlayers.map(player => (
-                  <div key={player.id} className="p-3 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-200">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-sm">{player.nickname}</span>
+                capturedPlayers.map((player) => (
+                  <div
+                    key={player.id}
+                    className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-orange-50 p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">{player.nickname}</span>
                       <button
                         onClick={() => updatePlayerStatus(player.id, 'active')}
-                        className="btn-success text-xs px-3 py-1.5 min-h-0"
+                        className="btn-success min-h-0 px-3 py-1.5 text-xs"
                       >
                         🚑 救出
                       </button>
@@ -248,46 +280,56 @@ export default function GamemasterPage() {
 
           {selectedPlayer && (
             <div className="card-elevated">
-              <h2 className="font-bold mb-3 flex items-center gap-2">
+              <h2 className="mb-3 flex items-center gap-2 font-bold">
                 <span>⚙️</span>
                 <span>プレイヤー操作</span>
               </h2>
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 rounded-xl mb-3 border border-blue-100">
-                <p className="text-sm font-semibold text-slate-800">選択中: {selectedPlayer.nickname}</p>
+              <div className="mb-3 rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-3">
+                <p className="text-sm font-semibold text-slate-800">
+                  選択中: {selectedPlayer.nickname}
+                </p>
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 mb-2 block">ステータス変更:</label>
+                  <label className="mb-2 block text-xs font-semibold text-slate-700">
+                    ステータス変更:
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['active', 'captured', 'rescued', 'safe'].map(status => (
+                    {['active', 'captured', 'rescued', 'safe'].map((status) => (
                       <button
                         key={status}
                         onClick={() => updatePlayerStatus(selectedPlayer.id, status)}
-                        className={`px-3 py-2 text-xs rounded-lg font-medium transition-all ${
+                        className={`rounded-lg px-3 py-2 text-xs font-medium transition-all ${
                           selectedPlayer.status === status
-                            ? 'bg-blue-500 text-white elevation-2'
+                            ? 'elevation-2 bg-blue-500 text-white'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
                       >
-                        {status === 'active' ? '✓ アクティブ' :
-                         status === 'captured' ? '🚨 捕獲' :
-                         status === 'rescued' ? '🚑 救出済' : '🛡️ 安全'}
+                        {status === 'active'
+                          ? '✓ アクティブ'
+                          : status === 'captured'
+                            ? '🚨 捕獲'
+                            : status === 'rescued'
+                              ? '🚑 救出済'
+                              : '🛡️ 安全'}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 mb-2 block">役職変更:</label>
+                  <label className="mb-2 block text-xs font-semibold text-slate-700">
+                    役職変更:
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {['runner', 'chaser'].map(role => (
+                    {['runner', 'chaser'].map((role) => (
                       <button
                         key={role}
                         onClick={() => reassignPlayer(selectedPlayer.id, role)}
-                        className={`px-3 py-2 text-xs rounded-lg font-medium transition-all ${
+                        className={`rounded-lg px-3 py-2 text-xs font-medium transition-all ${
                           selectedPlayer.role === role
-                            ? 'bg-green-500 text-white elevation-2'
+                            ? 'elevation-2 bg-green-500 text-white'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
                       >
@@ -303,11 +345,7 @@ export default function GamemasterPage() {
       </div>
 
       <div className="flex-1">
-        <Map
-          center={mapCenter}
-          visibleUsers={allPlayers}
-          zoom={14}
-        />
+        <Map center={mapCenter} visibleUsers={allPlayers} zoom={14} />
       </div>
     </div>
   );

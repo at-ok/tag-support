@@ -57,18 +57,17 @@ describe('useCapture', () => {
     // Mock useAuth
     vi.mocked(useAuth).mockReturnValue({
       user: mockChaser,
+      session: null,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     // Mock useLocation
     vi.mocked(useLocation).mockReturnValue({
       location: mockLocation,
       error: null,
-      accuracy: 10,
       isTracking: true,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -142,8 +141,8 @@ describe('useCapture', () => {
     });
 
     expect(result.current.captures).toHaveLength(1);
-    expect(result.current.captures[0].id).toBe(mockCapture.id);
-    expect(result.current.captures[0].chaserId).toBe(mockCapture.chaserId);
+    expect(result.current.captures[0]!.id).toBe(mockCapture.id);
+    expect(result.current.captures[0]!.chaserId).toBe(mockCapture.chaserId);
   });
 
   it('should record a capture successfully', async () => {
@@ -208,11 +207,11 @@ describe('useCapture', () => {
   it('should throw error if non-chaser tries to record capture', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockRunner,
+      session: null,
       loading: false,
       error: null,
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
     });
 
     const mockSelect = vi.fn().mockReturnThis();
@@ -249,7 +248,6 @@ describe('useCapture', () => {
     vi.mocked(useLocation).mockReturnValue({
       location: null,
       error: null,
-      accuracy: 0,
       isTracking: false,
       startTracking: vi.fn(),
       stopTracking: vi.fn(),
@@ -348,7 +346,7 @@ describe('useCapture', () => {
     });
 
     expect(nearbyRunners).toHaveLength(1);
-    expect(nearbyRunners[0].id).toBe(nearbyRunner.id);
+    expect(nearbyRunners![0]!.id).toBe(nearbyRunner.id);
   });
 
   it('should handle real-time capture updates', async () => {
@@ -399,7 +397,7 @@ describe('useCapture', () => {
       expect(result.current.captures).toHaveLength(1);
     });
 
-    expect(result.current.captures[0].id).toBe('capture-2');
+    expect(result.current.captures[0]!.id).toBe('capture-2');
   });
 
   it('should throw error when used outside CaptureProvider', () => {
