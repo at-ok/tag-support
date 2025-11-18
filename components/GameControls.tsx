@@ -22,36 +22,53 @@ export default function GameControls({ isGameMaster }: GameControlsProps) {
 
   if (!isGameMaster) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h3 className="font-bold mb-2">🎮 ゲーム状態</h3>
+      <div className="card-mobile">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+            <span className="text-xl">🎮</span>
+          </div>
+          <h3 className="font-bold text-lg text-slate-800">ゲーム状態</h3>
+        </div>
+
         {game ? (
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>状態:</span>
-              <span className={`font-bold ${
-                game.status === 'active' ? 'text-green-600' : 
-                game.status === 'waiting' ? 'text-yellow-600' : 
-                game.status === 'paused' ? 'text-orange-600' : 'text-gray-600'
-              }`}>
-                {game.status === 'waiting' ? '待機中' :
-                 game.status === 'active' ? '進行中' :
-                 game.status === 'paused' ? '一時停止' :
-                 game.status === 'finished' ? '終了' : game.status}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>制限時間:</span>
-              <span>{game.duration}分</span>
-            </div>
-            {game.startTime && game.status === 'active' && (
-              <div className="flex justify-between">
-                <span>開始時刻:</span>
-                <span>{game.startTime.toLocaleTimeString()}</span>
+          <div className="space-y-3">
+            <div className="bg-slate-50 rounded-xl p-4">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm text-slate-600 font-medium">状態</span>
+                <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                  game.status === 'active' ? 'bg-green-100 text-green-700' :
+                  game.status === 'waiting' ? 'bg-yellow-100 text-yellow-700' :
+                  game.status === 'paused' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'
+                }`}>
+                  {game.status === 'waiting' ? '⏳ 待機中' :
+                   game.status === 'active' ? '▶️ 進行中' :
+                   game.status === 'paused' ? '⏸️ 一時停止' :
+                   game.status === 'finished' ? '✓ 終了' : game.status}
+                </span>
               </div>
-            )}
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-600">制限時間</span>
+                  <span className="text-sm font-semibold text-slate-800">{game.duration}分</span>
+                </div>
+
+                {game.startTime && game.status === 'active' && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600">開始時刻</span>
+                    <span className="text-sm font-semibold text-slate-800">{game.startTime.toLocaleTimeString()}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">アクティブなゲームがありません</p>
+          <div className="text-center py-6">
+            <div className="w-12 h-12 bg-slate-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+              <span className="text-2xl opacity-50">🎮</span>
+            </div>
+            <p className="text-slate-500 text-sm">アクティブなゲームがありません</p>
+          </div>
         )}
       </div>
     );
@@ -81,37 +98,49 @@ export default function GameControls({ isGameMaster }: GameControlsProps) {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow space-y-4">
-      <h3 className="font-bold text-lg">🎮 ゲーム制御</h3>
-      
+    <div className="card-mobile">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+          <span className="text-xl">🎮</span>
+        </div>
+        <h3 className="font-bold text-lg text-slate-800">ゲーム制御</h3>
+      </div>
+
       {error && (
-        <div className="bg-red-50 text-red-600 p-2 rounded text-sm">
-          {error}
+        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-sm mb-4 flex items-start gap-2">
+          <span className="text-lg">⚠️</span>
+          <span>{error}</span>
         </div>
       )}
 
       {!game ? (
         <div className="space-y-4">
-          <h4 className="font-semibold">🆕 新しいゲームを作成</h4>
-          
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+            <h4 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
+              <span>🆕</span>
+              <span>新しいゲームを作成</span>
+            </h4>
+            <p className="text-xs text-slate-600">ゲームの設定を行ってください</p>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium mb-1">制限時間（分）</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">制限時間（分）</label>
             <input
               type="number"
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full input-touch"
               min="5"
               max="180"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">位置更新間隔</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">位置更新間隔</label>
             <select
               value={settings.locationUpdateInterval}
               onChange={(e) => setSettings({ ...settings, locationUpdateInterval: Number(e.target.value) })}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full input-touch"
             >
               <option value={15000}>15秒</option>
               <option value={30000}>30秒</option>
@@ -121,12 +150,12 @@ export default function GameControls({ isGameMaster }: GameControlsProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">鬼のレーダー範囲（メートル）</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">鬼のレーダー範囲（メートル）</label>
             <input
               type="number"
               value={settings.chaserRadarRange || 200}
               onChange={(e) => setSettings({ ...settings, chaserRadarRange: Number(e.target.value) })}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full input-touch"
               min="50"
               max="500"
             />
@@ -141,62 +170,88 @@ export default function GameControls({ isGameMaster }: GameControlsProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-gray-50 p-3 rounded">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-semibold">🎯 現在のゲーム</span>
-              <span className={`px-2 py-1 rounded text-sm font-bold ${
-                game.status === 'active' ? 'bg-green-100 text-green-800' : 
-                game.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' : 
-                game.status === 'paused' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-4 rounded-xl border border-slate-200">
+            <div className="flex justify-between items-center mb-3">
+              <span className="font-semibold text-slate-800 flex items-center gap-2">
+                <span>🎯</span>
+                <span>現在のゲーム</span>
+              </span>
+              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                game.status === 'active' ? 'bg-green-100 text-green-700' :
+                game.status === 'waiting' ? 'bg-yellow-100 text-yellow-700' :
+                game.status === 'paused' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'
               }`}>
-                {game.status}
+                {game.status === 'waiting' ? '⏳ 待機中' :
+                 game.status === 'active' ? '▶️ 進行中' :
+                 game.status === 'paused' ? '⏸️ 一時停止' :
+                 game.status === 'finished' ? '✓ 終了' : game.status}
               </span>
             </div>
-            <div className="text-sm text-gray-600">
-              <p>制限時間: {game.duration}分</p>
-              <p>更新間隔: {formatTime(game.settings.locationUpdateInterval)}</p>
-              <p>レーダー範囲: {game.settings.chaserRadarRange || 200}m</p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/60 rounded-lg p-3">
+                <p className="text-xs text-slate-600 mb-1">制限時間</p>
+                <p className="text-sm font-semibold text-slate-800">{game.duration}分</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-3">
+                <p className="text-xs text-slate-600 mb-1">更新間隔</p>
+                <p className="text-sm font-semibold text-slate-800">{formatTime(game.settings.locationUpdateInterval)}</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-3">
+                <p className="text-xs text-slate-600 mb-1">レーダー範囲</p>
+                <p className="text-sm font-semibold text-slate-800">{game.settings.chaserRadarRange || 200}m</p>
+              </div>
               {game.startTime && (
-                <p>開始時刻: {game.startTime.toLocaleTimeString()}</p>
+                <div className="bg-white/60 rounded-lg p-3">
+                  <p className="text-xs text-slate-600 mb-1">開始時刻</p>
+                  <p className="text-sm font-semibold text-slate-800">{game.startTime.toLocaleTimeString()}</p>
+                </div>
               )}
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {game.status === 'waiting' && (
               <button
                 onClick={startGame}
-                className="flex-1 btn-success"
+                className="col-span-2 btn-success"
               >
                 ▶️ ゲーム開始
               </button>
             )}
-            
+
             {game.status === 'active' && (
-              <button
-                onClick={pauseGame}
-                className="flex-1 btn-warning"
-              >
-                ⏸️ 一時停止
-              </button>
+              <>
+                <button
+                  onClick={pauseGame}
+                  className="btn-warning"
+                >
+                  ⏸️ 一時停止
+                </button>
+                <button
+                  onClick={endGame}
+                  className="btn-danger"
+                >
+                  ⏹️ 終了
+                </button>
+              </>
             )}
 
             {game.status === 'paused' && (
-              <button
-                onClick={startGame}
-                className="flex-1 btn-success"
-              >
-                ⏯️ 再開
-              </button>
-            )}
-
-            {(game.status === 'active' || game.status === 'paused') && (
-              <button
-                onClick={endGame}
-                className="flex-1 btn-danger"
-              >
-                ⏹️ ゲーム終了
-              </button>
+              <>
+                <button
+                  onClick={startGame}
+                  className="btn-success"
+                >
+                  ⏯️ 再開
+                </button>
+                <button
+                  onClick={endGame}
+                  className="btn-danger"
+                >
+                  ⏹️ 終了
+                </button>
+              </>
             )}
           </div>
 
@@ -204,32 +259,32 @@ export default function GameControls({ isGameMaster }: GameControlsProps) {
             onClick={() => setShowSettings(!showSettings)}
             className="w-full btn-secondary"
           >
-            {showSettings ? '設定を隠す' : '⚙️ ゲーム設定'}
+            {showSettings ? '設定を隠す ▲' : '⚙️ ゲーム設定 ▼'}
           </button>
 
           {showSettings && (
-            <div className="space-y-3 p-3 bg-gray-50 rounded">
+            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in slide-in-from-top-2 duration-200">
               <div>
-                <label className="block text-sm font-medium mb-1">Location Update Interval</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">位置更新間隔</label>
                 <select
                   value={settings.locationUpdateInterval}
                   onChange={(e) => setSettings({ ...settings, locationUpdateInterval: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full input-touch"
                 >
-                  <option value={15000}>15 seconds</option>
-                  <option value={30000}>30 seconds</option>
-                  <option value={60000}>1 minute</option>
-                  <option value={120000}>2 minutes</option>
+                  <option value={15000}>15秒</option>
+                  <option value={30000}>30秒</option>
+                  <option value={60000}>1分</option>
+                  <option value={120000}>2分</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Chaser Radar Range (meters)</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">鬼のレーダー範囲（メートル）</label>
                 <input
                   type="number"
                   value={settings.chaserRadarRange || 200}
                   onChange={(e) => setSettings({ ...settings, chaserRadarRange: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full input-touch"
                   min="50"
                   max="500"
                 />
@@ -237,9 +292,9 @@ export default function GameControls({ isGameMaster }: GameControlsProps) {
 
               <button
                 onClick={handleUpdateSettings}
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                className="w-full btn-primary"
               >
-                Update Settings
+                設定を更新
               </button>
             </div>
           )}

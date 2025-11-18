@@ -2,13 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Material Design基準のCSS変数 */
+:root {
+  /* Elevation Shadows (Material Design 3準拠) */
+  --shadow-1: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-2: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-3: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-4: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-6: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* Material Design Color System */
+  --md-primary: #2563eb;
+  --md-primary-hover: #1d4ed8;
+  --md-primary-active: #1e40af;
+  --md-on-primary: #ffffff;
+
+  --md-success: #16a34a;
+  --md-success-hover: #15803d;
+  --md-success-active: #166534;
+
+  --md-error: #dc2626;
+  --md-error-hover: #b91c1c;
+  --md-error-active: #991b1b;
+
+  --md-warning: #ea580c;
+  --md-warning-hover: #c2410c;
+  --md-warning-active: #9a3412;
+
+  /* Surface Colors */
+  --md-surface: #ffffff;
+  --md-surface-variant: #f8fafc;
+  --md-on-surface: #1e293b;
+  --md-outline: #cbd5e1;
+
+  /* 8dp Grid System */
+  --spacing-1: 0.5rem;  /* 8px */
+  --spacing-2: 1rem;    /* 16px */
+  --spacing-3: 1.5rem;  /* 24px */
+  --spacing-4: 2rem;    /* 32px */
+  --spacing-6: 3rem;    /* 48px */
+}
+
 /* Mobile optimizations */
 @layer base {
   html {
     /* Prevent zoom on input focus for mobile */
     font-size: 16px;
   }
-  
+
   body {
     /* Improve touch scrolling on iOS */
     -webkit-overflow-scrolling: touch;
@@ -17,75 +58,183 @@
     /* Prevent font boost on Android */
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    /* Material Design typography */
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--md-on-surface);
   }
+
+  /* Material Design Typography Scale */
+  h1 { @apply text-3xl font-normal tracking-normal; }
+  h2 { @apply text-2xl font-normal tracking-normal; }
+  h3 { @apply text-xl font-medium tracking-normal; }
+  h4 { @apply text-lg font-medium tracking-normal; }
+  h5 { @apply text-base font-medium tracking-normal; }
+  h6 { @apply text-sm font-medium tracking-wider; }
 }
 
 @layer components {
-  /* Touch-friendly buttons */
+  /* Material Design Elevated Button */
   .btn-touch {
-    @apply px-4 py-3 min-h-[48px] text-base font-medium rounded-lg;
-    @apply active:scale-95 transition-all duration-150;
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply px-6 py-3 min-h-[48px] text-base font-medium rounded-lg;
+    @apply transition-all duration-200 ease-out;
+    @apply focus:outline-none focus:ring-4 focus:ring-offset-0;
+    @apply relative overflow-hidden;
+    box-shadow: var(--shadow-2);
   }
-  
+
+  .btn-touch:hover {
+    box-shadow: var(--shadow-3);
+    @apply -translate-y-0.5;
+  }
+
+  .btn-touch:active {
+    box-shadow: var(--shadow-1);
+    @apply translate-y-0;
+  }
+
+  /* Material Design Ripple Effect */
+  .btn-touch::before {
+    content: '';
+    @apply absolute inset-0 bg-white opacity-0 transition-opacity duration-200;
+    border-radius: inherit;
+  }
+
+  .btn-touch:active::before {
+    @apply opacity-20;
+  }
+
+  /* Primary Button - Material Design */
   .btn-primary {
-    @apply btn-touch bg-blue-500 text-white;
-    @apply hover:bg-blue-600 active:bg-blue-700;
-    @apply focus:ring-blue-500;
+    @apply btn-touch text-white;
+    background-color: var(--md-primary);
+    @apply focus:ring-blue-500/30;
   }
-  
+
+  .btn-primary:hover {
+    background-color: var(--md-primary-hover);
+  }
+
+  .btn-primary:active {
+    background-color: var(--md-primary-active);
+  }
+
+  /* Success Button */
   .btn-success {
-    @apply btn-touch bg-green-500 text-white;
-    @apply hover:bg-green-600 active:bg-green-700;
-    @apply focus:ring-green-500;
+    @apply btn-touch text-white;
+    background-color: var(--md-success);
+    @apply focus:ring-green-500/30;
   }
-  
+
+  .btn-success:hover {
+    background-color: var(--md-success-hover);
+  }
+
+  .btn-success:active {
+    background-color: var(--md-success-active);
+  }
+
+  /* Danger Button */
   .btn-danger {
-    @apply btn-touch bg-red-500 text-white;
-    @apply hover:bg-red-600 active:bg-red-700;
-    @apply focus:ring-red-500;
+    @apply btn-touch text-white;
+    background-color: var(--md-error);
+    @apply focus:ring-red-500/30;
   }
-  
+
+  .btn-danger:hover {
+    background-color: var(--md-error-hover);
+  }
+
+  .btn-danger:active {
+    background-color: var(--md-error-active);
+  }
+
+  /* Warning Button */
   .btn-warning {
-    @apply btn-touch bg-orange-500 text-white;
-    @apply hover:bg-orange-600 active:bg-orange-700;
-    @apply focus:ring-orange-500;
+    @apply btn-touch text-white;
+    background-color: var(--md-warning);
+    @apply focus:ring-orange-500/30;
   }
-  
+
+  .btn-warning:hover {
+    background-color: var(--md-warning-hover);
+  }
+
+  .btn-warning:active {
+    background-color: var(--md-warning-active);
+  }
+
+  /* Secondary Button - Outlined Style */
   .btn-secondary {
-    @apply btn-touch bg-gray-500 text-white;
-    @apply hover:bg-gray-600 active:bg-gray-700;
-    @apply focus:ring-gray-500;
+    @apply btn-touch bg-white border-2;
+    border-color: var(--md-outline);
+    color: var(--md-primary);
+    @apply focus:ring-gray-500/30;
   }
-  
-  /* Touch-friendly form inputs */
+
+  .btn-secondary:hover {
+    @apply bg-slate-50;
+    border-color: var(--md-primary);
+  }
+
+  .btn-secondary:active {
+    @apply bg-slate-100;
+  }
+
+  /* Material Design Text Fields */
   .input-touch {
-    @apply px-4 py-3 min-h-[48px] text-base rounded-lg border;
-    @apply border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
-    @apply focus:outline-none transition-all duration-150;
+    @apply px-4 py-3 min-h-[48px] text-base rounded-lg border-2;
+    @apply transition-all duration-200 ease-out;
+    border-color: var(--md-outline);
+    background-color: var(--md-surface);
+    @apply focus:outline-none;
   }
-  
-  /* Card components for mobile */
+
+  .input-touch:hover {
+    @apply border-slate-400;
+  }
+
+  .input-touch:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  }
+
+  /* Material Design Cards */
   .card-mobile {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
-    @apply p-4 space-y-3;
+    background-color: var(--md-surface);
+    @apply rounded-2xl p-4 space-y-3;
+    box-shadow: var(--shadow-2);
+    @apply transition-shadow duration-200;
   }
-  
-  /* Status indicators */
+
+  .card-mobile:hover {
+    box-shadow: var(--shadow-3);
+  }
+
+  /* Elevated Card */
+  .card-elevated {
+    @apply card-mobile;
+    box-shadow: var(--shadow-4);
+  }
+
+  /* Material Design Chips/Badges */
   .status-active {
-    @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium;
+    @apply bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-medium;
+    @apply inline-flex items-center gap-1;
   }
-  
+
   .status-inactive {
-    @apply bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium;
+    @apply bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-sm font-medium;
+    @apply inline-flex items-center gap-1;
   }
-  
+
   .status-captured {
-    @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-medium;
+    @apply bg-red-100 text-red-800 px-3 py-1.5 rounded-full text-sm font-medium;
+    @apply inline-flex items-center gap-1;
   }
-  
+
   .status-safe {
-    @apply bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium;
+    @apply bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-sm font-medium;
+    @apply inline-flex items-center gap-1;
   }
 }
 
@@ -97,24 +246,24 @@
     -ms-user-select: none !important;
     user-select: none !important;
   }
-  
+
   /* Safe area for mobile devices */
   .safe-area-top {
     padding-top: env(safe-area-inset-top);
   }
-  
+
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
-  
+
   .safe-area-left {
     padding-left: env(safe-area-inset-left);
   }
-  
+
   .safe-area-right {
     padding-right: env(safe-area-inset-right);
   }
-  
+
   /* Full viewport height for mobile */
   .h-screen-mobile {
     height: 100vh;
@@ -122,50 +271,89 @@
     height: 100dvh;
     /* Dynamic viewport height */
   }
-  
+
   /* Smooth scrolling */
   .scroll-smooth-mobile {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
-  
-  /* Haptic feedback simulation */
+
+  /* Material Design Haptic feedback */
   .haptic-light {
-    @apply active:bg-opacity-80 transition-all duration-75;
+    @apply transition-all duration-150 ease-out;
   }
-  
+
+  .haptic-light:active {
+    @apply brightness-95;
+  }
+
   .haptic-medium {
-    @apply active:scale-95 active:bg-opacity-90 transition-all duration-100;
+    @apply transition-all duration-200 ease-out;
   }
-  
+
+  .haptic-medium:active {
+    @apply scale-[0.97] brightness-90;
+  }
+
   .haptic-heavy {
-    @apply active:scale-90 active:bg-opacity-95 transition-all duration-150;
+    @apply transition-all duration-250 ease-out;
   }
+
+  .haptic-heavy:active {
+    @apply scale-95 brightness-90;
+  }
+
+  /* Material Design Elevation helpers */
+  .elevation-0 { box-shadow: none; }
+  .elevation-1 { box-shadow: var(--shadow-1); }
+  .elevation-2 { box-shadow: var(--shadow-2); }
+  .elevation-3 { box-shadow: var(--shadow-3); }
+  .elevation-4 { box-shadow: var(--shadow-4); }
+  .elevation-6 { box-shadow: var(--shadow-6); }
 }
 
-/* Leaflet map mobile optimizations */
+/* Leaflet map mobile optimizations - Material Design準拠 */
 .leaflet-container {
   font-family: inherit;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .leaflet-control-zoom {
-  border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-3) !important;
+  border: none !important;
+  overflow: hidden;
 }
 
 .leaflet-control-zoom a {
   width: 48px !important;
   height: 48px !important;
-  line-height: 46px !important;
+  line-height: 48px !important;
   font-size: 24px !important;
-  border-radius: 8px !important;
+  border-radius: 0 !important;
+  transition: background-color 200ms ease-out !important;
 }
 
-/* Custom marker styles for better mobile visibility */
+.leaflet-control-zoom a:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.leaflet-control-zoom a:active {
+  background-color: #e2e8f0 !important;
+}
+
+/* Custom marker styles - Material Design準拠 */
 .custom-marker {
   border: 3px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-3);
   border-radius: 50%;
+  transition: transform 200ms ease-out;
+}
+
+.custom-marker:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-4);
 }
 
 .custom-marker.runner {
@@ -196,22 +384,39 @@
   .btn-touch {
     @apply border-2 border-current;
   }
+
+  .input-touch {
+    @apply border-4;
+  }
+
+  .card-mobile {
+    @apply border-2 border-current;
+  }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .btn-touch,
   .haptic-light,
   .haptic-medium,
-  .haptic-heavy {
+  .haptic-heavy,
+  .custom-marker {
     @apply transition-none;
   }
-  
-  .active\:scale-95 {
+
+  .btn-touch:hover,
+  .btn-touch:active {
     transform: none !important;
   }
-  
-  .active\:scale-90 {
+
+  .haptic-medium:active,
+  .haptic-heavy:active {
     transform: none !important;
   }
 }
