@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext } from 'react';
-import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, signInAnonymously, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { User, UserRole } from '@/types';
+import { supabase } from '@/lib/supabase';
+import type { Session } from '@supabase/supabase-js';
+import type { User, UserRole } from '@/types';
 
 interface AuthContextType {
-  firebaseUser: FirebaseUser | null;
+  session: Session | null;
   user: User | null;
   loading: boolean;
   error: string | null;
@@ -18,54 +17,100 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setFirebaseUser(fbUser);
-      
-      if (fbUser) {
-        const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
-        if (userDoc.exists()) {
-          setUser(userDoc.data() as User);
-        }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        loadUserData(session.user.id);
       } else {
-        setUser(null);
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
-    return unsubscribe;
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        loadUserData(session.user.id);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const loadUserData = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const row = data as any;
+        setUser({
+          id: row.id,
+          nickname: row.nickname,
+          role: row.role as UserRole,
+          team: row.team_id || undefined,
+          status: row.status === 'captured' ? 'captured' : row.status === 'offline' ? 'safe' : 'active',
+          lastUpdated: new Date(row.updated_at),
+          captureCount: 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error loading user data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load user data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const signIn = async (nickname: string, role: UserRole, team?: string) => {
     try {
       setError(null);
-      const result = await signInAnonymously(auth);
-      
-      const userData: any = {
-        id: result.user.uid,
-        nickname,
-        role,
-        status: 'active',
-        lastUpdated: new Date(),
-      };
 
-      // Only add optional fields if they have values
-      if (team) {
-        userData.team = team;
-      }
-      
-      if (role === 'chaser') {
-        userData.captureCount = 0;
-      }
+      // Create a temporary email based on nickname for anonymous-like auth
+      const tempEmail = `${nickname.toLowerCase().replace(/\s+/g, '')}@temp.tag-game.local`;
+      const tempPassword = `${Date.now()}-${Math.random().toString(36)}`;
 
-      await setDoc(doc(db, 'users', result.user.uid), userData);
-      setUser(userData);
+      // Sign up with temporary credentials
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: tempEmail,
+        password: tempPassword,
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No user returned from sign up');
+
+      // Create user record
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          nickname,
+          role: role === 'special' ? 'gamemaster' : role,
+          team_id: team || null,
+          status: 'active',
+        } as any);
+
+      if (insertError) throw insertError;
+
+      // Load the user data
+      await loadUserData(authData.user.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
       throw err;
@@ -74,8 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       setUser(null);
+      setSession(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign out failed');
       throw err;
@@ -83,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ firebaseUser, user, loading, error, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, error, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

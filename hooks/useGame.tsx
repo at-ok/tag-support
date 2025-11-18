@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, onSnapshot, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { Game, GameStatus, GameSettings } from '@/types';
+import { supabase } from '@/lib/supabase';
+import type { Game, GameStatus, GameSettings } from '@/types';
 import { useAuth } from './useAuth';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface GameContextType {
   game: Game | null;
@@ -32,36 +32,81 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Listen to the current active game
-    const gameDocRef = doc(db, 'games', 'current-game');
-    const unsubscribe = onSnapshot(gameDocRef, 
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const gameData = snapshot.data() as Game;
-          // Convert Firestore timestamps to Date objects
-          if (gameData.startTime) {
-            gameData.startTime = gameData.startTime instanceof Date 
-              ? gameData.startTime 
-              : new Date(gameData.startTime.seconds * 1000);
-          }
-          if (gameData.endTime) {
-            gameData.endTime = gameData.endTime instanceof Date 
-              ? gameData.endTime 
-              : new Date(gameData.endTime.seconds * 1000);
-          }
-          setGame(gameData);
-        } else {
-          setGame(null);
+    let channel: RealtimeChannel;
+
+    // Initial fetch
+    const fetchGame = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('game_state')
+          .select('*')
+          .limit(1)
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error; // Ignore "no rows" error
+
+        if (data) {
+          const row = data as any;
+          setGame({
+            id: row.id,
+            status: row.status as GameStatus,
+            startTime: row.start_time ? new Date(row.start_time) : undefined,
+            endTime: row.end_time ? new Date(row.end_time) : undefined,
+            duration: row.duration_minutes,
+            settings: {
+              locationUpdateInterval: 5000,
+              locationAccuracy: 10,
+              safeZones: [],
+              restrictedZones: [],
+              chaserRadarRange: 100,
+            },
+            players: [],
+            missions: [],
+          });
         }
         setLoading(false);
-      },
-      (err) => {
-        setError(err.message);
+      } catch (err) {
+        console.error('Error fetching game:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch game');
         setLoading(false);
       }
-    );
+    };
 
-    return unsubscribe;
+    fetchGame();
+
+    // Subscribe to real-time updates
+    channel = supabase
+      .channel('game_state_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state' }, (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setGame(null);
+        } else {
+          const data = payload.new;
+          setGame({
+            id: data.id,
+            status: data.status as GameStatus,
+            startTime: data.start_time ? new Date(data.start_time) : undefined,
+            endTime: data.end_time ? new Date(data.end_time) : undefined,
+            duration: data.duration_minutes,
+            settings: {
+              locationUpdateInterval: 5000,
+              locationAccuracy: 10,
+              safeZones: [],
+              restrictedZones: [],
+              chaserRadarRange: 100,
+            },
+            players: [],
+            missions: [],
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [user]);
 
   const createGame = async (settings: GameSettings, duration: number) => {
@@ -71,22 +116,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const gameId = 'current-game';
-      
-      const newGame: Game = {
-        id: gameId,
-        status: 'waiting',
-        duration,
-        settings,
-        players: [],
-        missions: []
-      };
 
-      await setDoc(doc(db, 'games', gameId), {
-        ...newGame,
-        createdAt: serverTimestamp(),
-        createdBy: user.id
-      });
+      const { error } = await supabase
+        .from('game_state')
+        .insert({
+          status: 'waiting',
+          duration_minutes: duration,
+        } as any);
+
+      if (error) throw error;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create game');
       throw err;
@@ -100,10 +138,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      await updateDoc(doc(db, 'games', game.id), {
-        status: 'active',
-        startTime: serverTimestamp()
-      });
+      const { error } = await supabase
+        .from('game_state')
+        .update({
+          status: 'active',
+          start_time: new Date().toISOString(),
+        } as any)
+        .eq('id', game.id);
+
+      if (error) throw error;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start game');
       throw err;
@@ -117,9 +160,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      await updateDoc(doc(db, 'games', game.id), {
-        status: 'paused'
-      });
+      const { error } = await supabase
+        .from('game_state')
+        .update({ status: 'paused' } as any)
+        .eq('id', game.id);
+
+      if (error) throw error;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to pause game');
       throw err;
@@ -133,10 +179,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      await updateDoc(doc(db, 'games', game.id), {
-        status: 'finished',
-        endTime: serverTimestamp()
-      });
+      const { error } = await supabase
+        .from('game_state')
+        .update({
+          status: 'finished',
+          end_time: new Date().toISOString(),
+        } as any)
+        .eq('id', game.id);
+
+      if (error) throw error;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to end game');
       throw err;
@@ -150,10 +201,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
+      // For now, we'll store settings in the game object in memory
+      // In a full implementation, you'd want to add a settings column to game_state
       const newSettings = { ...game.settings, ...settingsUpdate };
-      await updateDoc(doc(db, 'games', game.id), {
-        settings: newSettings
-      });
+      setGame({ ...game, settings: newSettings });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update settings');
       throw err;

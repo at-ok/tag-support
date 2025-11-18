@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types';
+import type { UserRole } from '@/types';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {

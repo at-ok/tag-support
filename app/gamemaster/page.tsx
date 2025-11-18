@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/useAuth';
 import { useGame } from '@/hooks/useGame';
-import { collection, onSnapshot, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { User, Game, GameStatus } from '@/types';
+import { supabase } from '@/lib/supabase';
+import type { User } from '@/types';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import GameControls from '@/components/GameControls';
 import MissionManager from '@/components/MissionManager';
 
@@ -21,27 +21,66 @@ export default function GamemasterPage() {
   useEffect(() => {
     if (!user || user.role !== 'gamemaster') return;
 
-    const playersQuery = query(
-      collection(db, 'users'),
-      orderBy('lastUpdated', 'desc')
-    );
+    let channel: RealtimeChannel;
 
-    const unsubscribePlayers = onSnapshot(playersQuery, (snapshot) => {
-      const players = snapshot.docs
-        .map(doc => ({ ...doc.data(), id: doc.id } as User))
-        .filter(u => u.role !== 'gamemaster');
-      setAllPlayers(players);
-    });
+    const fetchPlayers = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .neq('role', 'gamemaster')
+        .order('updated_at', { ascending: false });
 
-    return () => unsubscribePlayers();
+      if (error) {
+        console.error('Error fetching players:', error);
+        return;
+      }
+
+      if (data) {
+        const mappedPlayers: User[] = data.map((u: any) => ({
+          id: u.id,
+          nickname: u.nickname,
+          role: u.role as any,
+          team: u.team_id || undefined,
+          status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
+          lastUpdated: new Date(u.updated_at),
+          captureCount: 0,
+        }));
+        setAllPlayers(mappedPlayers);
+      }
+    };
+
+    fetchPlayers();
+
+    // Subscribe to real-time updates
+    channel = supabase
+      .channel('all_players_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'users',
+      }, () => {
+        fetchPlayers();
+      })
+      .subscribe();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [user]);
 
   const updatePlayerStatus = async (playerId: string, newStatus: string) => {
     try {
-      await updateDoc(doc(db, 'users', playerId), {
-        status: newStatus,
-        lastUpdated: new Date()
-      });
+      const { error } = await supabase
+        .from('users')
+        .update({
+          status: newStatus === 'captured' ? 'captured' : newStatus === 'offline' ? 'offline' : 'active',
+          updated_at: new Date().toISOString()
+        } as any)
+        .eq('id', playerId);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Failed to update player status:', error);
     }
@@ -51,12 +90,18 @@ export default function GamemasterPage() {
     try {
       const updates: any = {
         role: newRole,
-        lastUpdated: new Date()
+        updated_at: new Date().toISOString()
       };
       if (newTeam) {
-        updates.team = newTeam;
+        updates.team_id = newTeam;
       }
-      await updateDoc(doc(db, 'users', playerId), updates);
+
+      const { error } = await supabase
+        .from('users')
+        .update(updates as any)
+        .eq('id', playerId);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Failed to reassign player:', error);
     }

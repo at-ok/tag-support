@@ -5,9 +5,9 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from '@/hooks/useLocation';
 import { useGame } from '@/hooks/useGame';
-import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { User } from '@/types';
+import { supabase } from '@/lib/supabase';
+import type { User } from '@/types';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
@@ -21,28 +21,63 @@ export default function ChaserPage() {
   useEffect(() => {
     if (!user || user.role !== 'chaser') return;
 
-    const q = query(
-      collection(db, 'users'),
-      where('role', '==', 'runner'),
-      where('status', 'in', ['active', 'rescued'])
-    );
+    let channel: RealtimeChannel;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const runners = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
-      setAllRunners(runners);
-      
-      if (location) {
-        const radarRange = game?.settings.chaserRadarRange || 200;
-        const nearby = runners.filter(runner => {
-          if (!runner.location) return false;
-          const distance = calculateDistance(location, runner.location);
-          return distance <= radarRange;
-        });
-        setNearbyRunners(nearby);
+    const fetchRunners = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'runner')
+        .in('status', ['active']);
+
+      if (error) {
+        console.error('Error fetching runners:', error);
+        return;
       }
-    });
 
-    return () => unsubscribe();
+      if (data) {
+        const mappedRunners: User[] = data.map((u: any) => ({
+          id: u.id,
+          nickname: u.nickname,
+          role: u.role as any,
+          team: u.team_id || undefined,
+          status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
+          lastUpdated: new Date(u.updated_at),
+        }));
+        setAllRunners(mappedRunners);
+
+        if (location) {
+          const radarRange = game?.settings.chaserRadarRange || 200;
+          const nearby = mappedRunners.filter(runner => {
+            if (!runner.location) return false;
+            const distance = calculateDistance(location, runner.location);
+            return distance <= radarRange;
+          });
+          setNearbyRunners(nearby);
+        }
+      }
+    };
+
+    fetchRunners();
+
+    // Subscribe to real-time updates
+    channel = supabase
+      .channel('runners_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'users',
+        filter: 'role=eq.runner',
+      }, () => {
+        fetchRunners();
+      })
+      .subscribe();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [user, location]);
 
   useEffect(() => {
@@ -68,15 +103,17 @@ export default function ChaserPage() {
 
   const captureRunner = async (runnerId: string) => {
     if (!user) return;
-    
+
     try {
-      await updateDoc(doc(db, 'users', runnerId), {
-        status: 'captured'
-      });
-      
-      await updateDoc(doc(db, 'users', user.id), {
-        captureCount: (user.captureCount || 0) + 1
-      });
+      // Update runner status to captured
+      const { error: runnerError } = await supabase
+        .from('users')
+        .update({ status: 'captured' } as any)
+        .eq('id', runnerId);
+
+      if (runnerError) throw runnerError;
+
+      console.log('Runner captured successfully');
     } catch (error) {
       console.error('Failed to capture runner:', error);
     }

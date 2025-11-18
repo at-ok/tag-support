@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Location } from '@/types';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import type { Location } from '@/types';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
 interface UseLocationReturn {
@@ -21,14 +20,30 @@ export function useLocation(updateInterval: number = 30000): UseLocationReturn {
   const [isTracking, setIsTracking] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
 
-  const updateLocationInFirestore = useCallback(async (loc: Location) => {
+  const updateLocationInDatabase = useCallback(async (loc: Location) => {
     if (!user) return;
-    
+
     try {
-      await updateDoc(doc(db, 'users', user.id), {
-        location: loc,
-        lastUpdated: new Date(),
-      });
+      // Insert new location record
+      const { error: insertError } = await supabase
+        .from('player_locations')
+        .insert({
+          user_id: user.id,
+          latitude: loc.lat,
+          longitude: loc.lng,
+          accuracy: loc.accuracy || null,
+          timestamp: loc.timestamp.toISOString(),
+        });
+
+      if (insertError) throw insertError;
+
+      // Update user's last updated time
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
     } catch (err) {
       console.error('Failed to update location:', err);
     }
@@ -51,9 +66,9 @@ export function useLocation(updateInterval: number = 30000): UseLocationReturn {
           accuracy: position.coords.accuracy,
           timestamp: new Date(),
         };
-        
+
         setLocation(newLocation);
-        updateLocationInFirestore(newLocation);
+        updateLocationInDatabase(newLocation);
       },
       (err) => {
         setError(err.message);
@@ -67,7 +82,7 @@ export function useLocation(updateInterval: number = 30000): UseLocationReturn {
     );
 
     setWatchId(id);
-  }, [updateInterval, updateLocationInFirestore]);
+  }, [updateInterval, updateLocationInDatabase]);
 
   const stopTracking = useCallback(() => {
     if (watchId !== null) {
