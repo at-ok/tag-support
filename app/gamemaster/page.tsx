@@ -10,6 +10,8 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import GameControls from '@/components/GameControls';
 import MissionManager from '@/components/MissionManager';
 import ZoneManager from '@/components/ZoneManager';
+import GameStats from '@/components/GameStats';
+import ReplayViewer from '@/components/ReplayViewer';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
@@ -179,6 +181,10 @@ export default function GamemasterPage() {
           <MissionManager isGameMaster={true} />
 
           <ZoneManager isGameMaster={true} />
+
+          {game && <GameStats gameId={game.id} isGameMaster={true} />}
+
+          {selectedPlayer && <ReplayViewer userId={selectedPlayer.id} gameId={game?.id} isGameMaster={true} />}
 
           <div className="card-mobile">
             <h2 className="font-bold mb-3 flex items-center gap-2">
