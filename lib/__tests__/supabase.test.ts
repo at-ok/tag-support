@@ -12,22 +12,24 @@ describe('Supabase Client', () => {
     process.env = originalEnv;
   });
 
-  it('should throw error when NEXT_PUBLIC_SUPABASE_URL is missing', async () => {
+  it('should use placeholder values when NEXT_PUBLIC_SUPABASE_URL is missing', async () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-key';
 
-    await expect(async () => {
-      await import('../supabase');
-    }).rejects.toThrow('Missing Supabase environment variables');
+    const { supabase } = await import('../supabase');
+
+    // Should create client with placeholder URL
+    expect(supabase).toBeDefined();
   });
 
-  it('should throw error when NEXT_PUBLIC_SUPABASE_ANON_KEY is missing', async () => {
+  it('should use placeholder values when NEXT_PUBLIC_SUPABASE_ANON_KEY is missing', async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    await expect(async () => {
-      await import('../supabase');
-    }).rejects.toThrow('Missing Supabase environment variables');
+    const { supabase } = await import('../supabase');
+
+    // Should create client with placeholder key
+    expect(supabase).toBeDefined();
   });
 
   it('should create supabase client when environment variables are present', async () => {

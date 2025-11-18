@@ -117,12 +117,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
 
-      const { error } = await supabase
+      const insertPayload: Record<string, unknown> = {
+        status: 'waiting',
+        duration_minutes: duration,
+      };
+
+      const { error } = await (supabase
         .from('game_state')
-        .insert({
-          status: 'waiting',
-          duration_minutes: duration,
-        } as any);
+        .insert(insertPayload as never));
 
       if (error) throw error;
     } catch (err) {
@@ -138,13 +140,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const { error } = await supabase
+      const updatePayload: Record<string, unknown> = {
+        status: 'active',
+        start_time: new Date().toISOString(),
+      };
+      const { error } = await (supabase
         .from('game_state')
-        .update({
-          status: 'active',
-          start_time: new Date().toISOString(),
-        } as any)
-        .eq('id', game.id);
+        .update(updatePayload as never)
+        .eq('id', game.id));
 
       if (error) throw error;
     } catch (err) {
@@ -160,10 +163,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const { error } = await supabase
+      const updatePayload: Record<string, unknown> = { status: 'paused' };
+      const { error } = await (supabase
         .from('game_state')
-        .update({ status: 'paused' } as any)
-        .eq('id', game.id);
+        .update(updatePayload as never)
+        .eq('id', game.id));
 
       if (error) throw error;
     } catch (err) {
@@ -179,13 +183,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setError(null);
-      const { error } = await supabase
+      const updatePayload: Record<string, unknown> = {
+        status: 'finished',
+        end_time: new Date().toISOString(),
+      };
+      const { error } = await (supabase
         .from('game_state')
-        .update({
-          status: 'finished',
-          end_time: new Date().toISOString(),
-        } as any)
-        .eq('id', game.id);
+        .update(updatePayload as never)
+        .eq('id', game.id));
 
       if (error) throw error;
     } catch (err) {

@@ -49,7 +49,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
 
         if (data) {
-          const mappedCaptures: Capture[] = data.map(c => ({
+          const mappedCaptures: Capture[] = (data as any[]).map((c: any) => ({
             id: c.id,
             chaserId: c.chaser_id,
             runnerId: c.runner_id,
@@ -127,23 +127,26 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
 
-      const { error } = await supabase
+      const insertPayload: Record<string, unknown> = {
+        chaser_id: user.id,
+        runner_id: runnerId,
+        latitude: location.lat,
+        longitude: location.lng,
+        verified: false,
+      };
+
+      const { error } = await (supabase
         .from('captures')
-        .insert({
-          chaser_id: user.id,
-          runner_id: runnerId,
-          latitude: location.lat,
-          longitude: location.lng,
-          verified: false,
-        });
+        .insert(insertPayload as never));
 
       if (error) throw error;
 
       // Update runner status to captured
-      await supabase
+      const updatePayload: Record<string, unknown> = { status: 'captured' };
+      await (supabase
         .from('users')
-        .update({ status: 'captured' })
-        .eq('id', runnerId);
+        .update(updatePayload as never)
+        .eq('id', runnerId));
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record capture');
@@ -164,20 +167,21 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       // Use PostGIS function to find nearby players
-      const { data: nearbyData, error: rpcError } = await supabase.rpc('nearby_players', {
+      const { data: nearbyData, error: rpcError } = await supabase.rpc('nearby_players' as any, {
         center_lat: location.lat,
         center_lng: location.lng,
         radius_meters: radiusMeters,
-      });
+      } as any);
 
       if (rpcError) throw rpcError;
 
-      if (!nearbyData || nearbyData.length === 0) {
+      const typedNearbyData = nearbyData as any[] | null;
+      if (!typedNearbyData || typedNearbyData.length === 0) {
         return [];
       }
 
       // Get user details for nearby players
-      const userIds = nearbyData.map((d: any) => d.user_id);
+      const userIds = typedNearbyData.map((d: any) => d.user_id);
       const { data: usersData, error: usersError } = await supabase
         .from('users')
         .select('*')
@@ -189,7 +193,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
 
       if (!usersData) return [];
 
-      const users: User[] = usersData.map(u => ({
+      const users: User[] = (usersData as any[]).map((u: any) => ({
         id: u.id,
         nickname: u.nickname,
         role: u.role,

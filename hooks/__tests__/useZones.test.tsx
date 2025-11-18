@@ -221,9 +221,10 @@ describe('useZones', () => {
       expect.objectContaining({
         name: 'New Safe Zone',
         type: 'safe',
-        center_latitude: mockLocation.lat,
-        center_longitude: mockLocation.lng,
+        center_lat: mockLocation.lat,
+        center_lng: mockLocation.lng,
         radius_meters: 150,
+        active: true,
       })
     );
   });
