@@ -58,3 +58,20 @@ export interface Mission {
   completed: boolean;
   completedBy: string[];
 }
+
+export interface Capture {
+  id: string;
+  chaserId: string;
+  runnerId: string;
+  location: Location;
+  captureTime: Date;
+  verified: boolean;
+}
+
+export interface MissionCompletion {
+  id: string;
+  missionId: string;
+  userId: string;
+  completedAt: Date;
+  pointsEarned: number;
+}
