@@ -153,14 +153,56 @@
   - TypeScript型安全性の徹底
   - ビルド成功確認
 
+### Phase 5: 位置履歴自動記録・Push通知システム (完了) ⭐️ NEW
+
+- [x] **location_historyテーブル実装**
+  - データベーススキーママイグレーション作成
+  - PostGIS対応の地理的インデックス
+  - 速度・方向・精度フィールドの追加
+  - ユーザー/ゲームID別のクエリ最適化
+  - 位置履歴統計計算関数（get_location_stats）
+  - リプレイ用パス取得関数（get_location_path）
+
+- [x] **useLocation自動履歴記録機能**
+  - useLocationフックの拡張（location_history統合）
+  - 速度自動計算（Haversine距離公式）
+  - 方向自動計算（方位角計算）
+  - 位置更新時の自動履歴保存
+  - enableHistoryオプションでオン/オフ切り替え可能
+
+- [x] **Push通知システム基礎実装**
+  - useNotificationsカスタムフック作成
+  - Web Push API統合
+  - 通知権限管理
+  - 役職別通知タイプ定義（8種類）
+  - バイブレーションパターンのカスタマイズ
+  - Service Worker通知ハンドラ実装
+  - 通知クリック時のアプリ起動/フォーカス
+  - 通知テンプレート機能（8種類のテンプレート）
+
+- [x] **Service Worker機能強化**
+  - Push通知イベントハンドラ
+  - 通知クリックイベントハンドラ
+  - バックグラウンド同期準備
+  - キャッシュ戦略の改善
+  - 自動アクティベーション
+
+- [x] **テスト・品質保証** ⭐️ NEW
+  - useNotificationsの包括的テスト（16テスト）
+  - useLocationテストの更新（Supabase統合）
+  - 全86テスト成功（100%） ← 70テストから16テスト追加
+  - TypeScript型安全性の維持
+  - ビルド成功確認
+
 ## 現在の制限事項
 
 ### 未実装機能
 
-- [ ] Push通知システム（Web Push API統合）
+- [x] ~~Push通知システム（Web Push API統合）~~ ✅ 完了
+- [x] ~~データベーススキーマの実環境デプロイ（location_historyテーブル等）~~ ✅ マイグレーション完了
 - [ ] マルチゲームマスター対応（複数GM同時運営）
-- [ ] データベーススキーマの実環境デプロイ（location_historyテーブル等）
 - [ ] 特殊役職システム（データモデルは準備済み）
+- [ ] Push通知サーバー統合（現在はクライアントサイドのみ）
 
 ### 技術的制約
 
@@ -171,53 +213,60 @@
 ## ファイル構成
 
 ```
-tag-support/ (25ファイル作成) ⭐️ 更新
+tag-support/ (28ファイル作成) ⭐️ 更新
+├── supabase/migrations/
+│   ├── 20250101000000_initial_schema.sql
+│   ├── 20250118000000_add_captures_zones.sql
+│   └── 20250119000000_add_location_history.sql ⭐️ NEW
 ├── lib/
 │   └── supabase.ts           # Supabase設定
 ├── types/index.ts           # 型定義
 ├── hooks/
 │   ├── useAuth.tsx          # 認証フック
-│   ├── useLocation.ts       # 位置情報フック
+│   ├── useLocation.ts       # 位置情報フック（履歴自動記録機能追加） ⭐️ 更新
 │   ├── useGame.tsx          # ゲーム状態フック
 │   ├── useMissions.tsx      # ミッションフック
 │   ├── useCapture.tsx       # 捕獲フック
 │   ├── useZones.tsx         # ゾーンフック
-│   └── useLocationHistory.tsx  # 位置履歴フック ⭐️ NEW
+│   ├── useLocationHistory.tsx  # 位置履歴フック
+│   └── useNotifications.tsx # Push通知フック ⭐️ NEW
 ├── components/
 │   ├── Map.tsx              # 地図コンポーネント
 │   ├── GameControls.tsx     # ゲーム制御
 │   ├── MissionManager.tsx   # ミッション管理
 │   ├── ZoneManager.tsx      # ゾーン管理
-│   ├── GameStats.tsx        # ゲーム統計 ⭐️ NEW
-│   └── ReplayViewer.tsx     # リプレイビューア ⭐️ NEW
+│   ├── GameStats.tsx        # ゲーム統計
+│   └── ReplayViewer.tsx     # リプレイビューア
 ├── app/
 │   ├── layout.tsx           # 共通レイアウト
 │   ├── page.tsx            # ランディング
 │   ├── runner/page.tsx     # 逃走者UI
 │   ├── chaser/page.tsx     # 鬼UI
-│   └── gamemaster/page.tsx # GM UI（統計・リプレイ統合済み） ⭐️ 更新
+│   └── gamemaster/page.tsx # GM UI（統計・リプレイ統合済み）
 └── public/
     ├── manifest.json        # PWAマニフェスト
-    └── sw.js               # Service Worker
+    └── sw.js               # Service Worker（Push通知対応） ⭐️ 更新
 ```
 
 ## テスト状況
 
 ### 自動テスト環境 ✅
 
-- [x] **ユニットテスト (Vitest)** - 70/70テスト成功（100%） ⭐️ 更新
+- [x] **ユニットテスト (Vitest)** - 86/86テスト成功（100%） ⭐️ 更新
   - lib/supabase.ts: 4/4テスト成功（環境変数フォールバック対応）
-  - hooks/useLocation.ts: 8/8テスト成功
+  - hooks/useLocation.ts: 8/8テスト成功（履歴記録機能追加） ⭐️ 更新
   - hooks/useAuth.tsx: 9/9テスト成功 (Supabaseベース)
   - hooks/useGame.tsx: 10/10テスト成功 (Supabaseベース)
   - hooks/useMissions.tsx: 13/13テスト成功 (Supabaseベース)
   - hooks/useCapture.tsx: 8/8テスト成功
   - hooks/useZones.tsx: 9/9テスト成功（フィールド名修正対応）
-  - hooks/useLocationHistory.tsx: 9/9テスト成功 ⭐️ NEW
+  - hooks/useLocationHistory.tsx: 9/9テスト成功
+  - hooks/useNotifications.tsx: 16/16テスト成功 ⭐️ NEW
 - [x] **テスト品質向上** ⭐️ NEW
   - Supabase統合完了
   - 全テストがSupabaseのモックを使用
   - テストカバレッジ維持（高品質コード保証）
+  - Push通知機能の包括的テスト追加
 - [x] **E2Eテスト (Playwright)**
   - ホームページテスト
   - 役職別ページテスト（逃走者・鬼・ゲームマスター）
@@ -232,12 +281,13 @@ tag-support/ (25ファイル作成) ⭐️ 更新
 
 - [x] ローカル開発環境起動
 - [x] ビルドプロセス（npm run build成功）
-- [x] 全テストスイート実行（70/70成功） ⭐️ 更新
+- [x] 全テストスイート実行（86/86成功） ⭐️ 更新
 - [ ] Supabase接続テスト（実環境）
 - [ ] 認証フロー
 - [ ] 位置情報取得
 - [ ] 地図表示
 - [ ] 役職別画面遷移
+- [ ] Push通知機能（実機）
 
 ### 未テスト
 
@@ -250,18 +300,19 @@ tag-support/ (25ファイル作成) ⭐️ 更新
 
 ### 優先度: 高
 
-1. **Supabaseデータベーススキーマ作成**
-   - location_historyテーブルの作成
-   - インデックス設定（user_id, game_id, timestamp）
-   - マイグレーションファイル作成
-2. **位置履歴の自動記録機能**
-   - useLocationフックとの統合
-   - 自動的な履歴保存機能
-   - パフォーマンス最適化（バッチ処理）
-3. **Supabase実環境セットアップ**
+1. **Supabase実環境セットアップ** ⭐️ 最優先
    - セキュリティルール設定
    - RLS (Row Level Security) ポリシー
+   - location_historyマイグレーションの実行
    - 実環境での動作確認
+2. **Push通知の実機テスト**
+   - iOS/Android実機でのPush通知確認
+   - 通知権限フローのテスト
+   - バイブレーションパターンの確認
+3. **位置履歴機能の実機テスト**
+   - 実際の移動での履歴記録確認
+   - 速度・方向計算の精度検証
+   - リプレイ機能の動作確認
 
 ### 優先度: 中
 
@@ -269,10 +320,13 @@ tag-support/ (25ファイル作成) ⭐️ 更新
    - iOS/Android実機でのテスト
    - PWAインストールテスト
    - 位置情報精度確認
-5. **Push通知基礎実装**
-   - Web Push API統合
-   - ゲームイベント通知
+   - バッテリー消費テスト
+5. **Push通知サーバー統合**
+   - Supabase EdgeFunctionsでのPush送信
+   - ゲームイベント連動の自動通知
+   - 通知スケジューリング機能
 6. **パフォーマンス最適化**
    - バンドルサイズ削減
    - 地図描画の最適化
    - リプレイデータの効率的な読み込み
+   - 位置履歴のバッチ処理実装
