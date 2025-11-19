@@ -26,7 +26,10 @@ export interface NotificationOptions {
 interface UseNotificationsReturn {
   permission: NotificationPermission;
   isSupported: boolean;
+  isSubscribed: boolean;
   requestPermission: () => Promise<boolean>;
+  subscribeToPush: (userId: string) => Promise<boolean>;
+  unsubscribeFromPush: (userId: string) => Promise<boolean>;
   sendNotification: (type: NotificationType, options: NotificationOptions) => Promise<void>;
   error: string | null;
 }
@@ -34,6 +37,7 @@ interface UseNotificationsReturn {
 export function useNotifications(): UseNotificationsReturn {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Check if notifications are supported
@@ -41,6 +45,18 @@ export function useNotifications(): UseNotificationsReturn {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setIsSupported(true);
       setPermission(Notification.permission);
+
+      // Check if already subscribed to push notifications
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        navigator.serviceWorker.ready
+          .then((registration) => registration.pushManager.getSubscription())
+          .then((subscription) => {
+            setIsSubscribed(subscription !== null);
+          })
+          .catch((err) => {
+            console.error('Error checking push subscription:', err);
+          });
+      }
     } else {
       setIsSupported(false);
     }
@@ -65,6 +81,122 @@ export function useNotifications(): UseNotificationsReturn {
       return false;
     }
   }, [isSupported]);
+
+  // Subscribe to push notifications
+  const subscribeToPush = useCallback(
+    async (userId: string): Promise<boolean> => {
+      if (!isSupported) {
+        setError('Notifications are not supported');
+        return false;
+      }
+
+      if (permission !== 'granted') {
+        setError('Notification permission not granted');
+        return false;
+      }
+
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        setError('Push notifications are not supported');
+        return false;
+      }
+
+      try {
+        // Get VAPID public key from server
+        const vapidResponse = await fetch('/api/push/vapid');
+        if (!vapidResponse.ok) {
+          throw new Error('Failed to get VAPID public key');
+        }
+        const { publicKey } = await vapidResponse.json();
+
+        // Wait for service worker to be ready
+        const registration = await navigator.serviceWorker.ready;
+
+        // Subscribe to push notifications
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+
+        // Send subscription to server
+        const subscribeResponse = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            subscription: subscription.toJSON(),
+          }),
+        });
+
+        if (!subscribeResponse.ok) {
+          throw new Error('Failed to save subscription to server');
+        }
+
+        setIsSubscribed(true);
+        setError(null);
+        console.log('Successfully subscribed to push notifications');
+        return true;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe to push';
+        setError(errorMessage);
+        console.error('Error subscribing to push notifications:', err);
+        return false;
+      }
+    },
+    [isSupported, permission]
+  );
+
+  // Unsubscribe from push notifications
+  const unsubscribeFromPush = useCallback(
+    async (userId: string): Promise<boolean> => {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        setError('Push notifications are not supported');
+        return false;
+      }
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+          setIsSubscribed(false);
+          return true;
+        }
+
+        // Unsubscribe from push manager
+        const unsubscribed = await subscription.unsubscribe();
+
+        if (unsubscribed) {
+          // Remove subscription from server
+          await fetch('/api/push/unsubscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId,
+              endpoint: subscription.endpoint,
+            }),
+          });
+
+          setIsSubscribed(false);
+          setError(null);
+          console.log('Successfully unsubscribed from push notifications');
+          return true;
+        }
+
+        return false;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to unsubscribe from push';
+        setError(errorMessage);
+        console.error('Error unsubscribing from push notifications:', err);
+        return false;
+      }
+    },
+    []
+  );
 
   // Send a notification
   const sendNotification = useCallback(
@@ -131,10 +263,27 @@ export function useNotifications(): UseNotificationsReturn {
   return {
     permission,
     isSupported,
+    isSubscribed,
     requestPermission,
+    subscribeToPush,
+    unsubscribeFromPush,
     sendNotification,
     error,
   };
+}
+
+// Helper function to convert VAPID public key
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }
 
 // Get default vibration pattern based on notification type

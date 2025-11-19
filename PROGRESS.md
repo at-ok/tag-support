@@ -194,15 +194,54 @@
   - TypeScript型安全性の維持
   - ビルド成功確認
 
+### Phase 6: プッシュ通知サーバー実装 (完了) ⭐️ NEW
+
+- [x] **VAPIDキー生成システム**
+  - VAPIDキー生成スクリプト作成（scripts/generate-vapid-keys.js）
+  - 環境変数設定（.env.example更新）
+  - セキュアな鍵管理方法の文書化
+
+- [x] **Next.js API Routes実装**
+  - GET /api/push/vapid - VAPID公開鍵取得API
+  - POST /api/push/subscribe - プッシュサブスクリプション登録API
+  - POST /api/push/unsubscribe - サブスクリプション解除API
+  - POST /api/push/send - プッシュ通知送信API（ユーザー/ロール別フィルタリング）
+
+- [x] **Web Pushユーティリティライブラリ**
+  - lib/web-push.ts作成
+  - web-pushライブラリ統合
+  - バッチ送信機能
+  - サブスクリプション検証機能
+  - エラーハンドリングと無効サブスクリプション削除
+
+- [x] **データベース統合**
+  - push_subscriptionsテーブル作成（マイグレーション）
+  - Database型定義の拡張（types/database.ts）
+  - RLSポリシー設定（ユーザー毎のサブスクリプション管理）
+  - 自動更新タイムスタンプトリガー
+
+- [x] **クライアント側統合**
+  - useNotificationsフック拡張（subscribeToPush/unsubscribeFromPush）
+  - VAPID公開鍵の自動取得
+  - Service Worker統合強化
+  - プッシュサブスクリプション管理
+
+- [x] **ドキュメント作成**
+  - docs/push-notifications.md（セットアップ・使用方法・API仕様）
+  - トラブルシューティングガイド
+  - セキュリティベストプラクティス
+
 ## 現在の制限事項
 
 ### 未実装機能
 
 - [x] ~~Push通知システム（Web Push API統合）~~ ✅ 完了
+- [x] ~~Push通知サーバー統合~~ ✅ 完了（Phase 6）
 - [x] ~~データベーススキーマの実環境デプロイ（location_historyテーブル等）~~ ✅ マイグレーション完了
+- [ ] Supabase実環境構築（RLS設定、マイグレーション実行）
 - [ ] マルチゲームマスター対応（複数GM同時運営）
 - [ ] 特殊役職システム（データモデルは準備済み）
-- [ ] Push通知サーバー統合（現在はクライアントサイドのみ）
+- [ ] ゲームイベント連動の自動通知（サーバー統合）
 
 ### 技術的制約
 
@@ -213,14 +252,20 @@
 ## ファイル構成
 
 ```
-tag-support/ (28ファイル作成) ⭐️ 更新
+tag-support/ (35ファイル作成) ⭐️ 更新
 ├── supabase/migrations/
 │   ├── 20250101000000_initial_schema.sql
 │   ├── 20250118000000_add_captures_zones.sql
-│   └── 20250119000000_add_location_history.sql ⭐️ NEW
+│   ├── 20250119000000_add_location_history.sql
+│   └── 20250120000000_add_push_subscriptions.sql ⭐️ NEW
+├── scripts/
+│   └── generate-vapid-keys.js ⭐️ NEW
 ├── lib/
-│   └── supabase.ts           # Supabase設定
-├── types/index.ts           # 型定義
+│   ├── supabase.ts           # Supabase設定
+│   └── web-push.ts          # Web Pushユーティリティ ⭐️ NEW
+├── types/
+│   ├── index.ts             # 型定義
+│   └── database.ts          # Database型定義（push_subscriptions追加） ⭐️ 更新
 ├── hooks/
 │   ├── useAuth.tsx          # 認証フック
 │   ├── useLocation.ts       # 位置情報フック（履歴自動記録機能追加） ⭐️ 更新
@@ -229,7 +274,7 @@ tag-support/ (28ファイル作成) ⭐️ 更新
 │   ├── useCapture.tsx       # 捕獲フック
 │   ├── useZones.tsx         # ゾーンフック
 │   ├── useLocationHistory.tsx  # 位置履歴フック
-│   └── useNotifications.tsx # Push通知フック ⭐️ NEW
+│   └── useNotifications.tsx # Push通知フック（サーバー統合） ⭐️ 更新
 ├── components/
 │   ├── Map.tsx              # 地図コンポーネント
 │   ├── GameControls.tsx     # ゲーム制御
@@ -242,7 +287,18 @@ tag-support/ (28ファイル作成) ⭐️ 更新
 │   ├── page.tsx            # ランディング
 │   ├── runner/page.tsx     # 逃走者UI
 │   ├── chaser/page.tsx     # 鬼UI
-│   └── gamemaster/page.tsx # GM UI（統計・リプレイ統合済み）
+│   ├── gamemaster/page.tsx # GM UI（統計・リプレイ統合済み）
+│   └── api/push/           # Push通知API ⭐️ NEW
+│       ├── vapid/route.ts  # VAPID公開鍵取得
+│       ├── subscribe/route.ts # サブスクリプション登録
+│       ├── unsubscribe/route.ts # サブスクリプション解除
+│       └── send/route.ts   # プッシュ通知送信
+├── docs/
+│   ├── TESTING.md
+│   ├── TECH_STACK_MIGRATION.md
+│   ├── SUPABASE_SETUP.md
+│   ├── 仕様書.md
+│   └── push-notifications.md ⭐️ NEW
 └── public/
     ├── manifest.json        # PWAマニフェスト
     └── sw.js               # Service Worker（Push通知対応） ⭐️ 更新

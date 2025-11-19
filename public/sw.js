@@ -57,41 +57,115 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification event
 self.addEventListener('push', (event) => {
-  const options = {
+  console.log('[Service Worker] Push received:', event);
+
+  let notificationData = {
+    title: 'Tag Support',
     body: 'New notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-192x192.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: 1,
+      url: '/',
     },
   };
 
+  // Parse push data
   if (event.data) {
     try {
-      const data = event.data.json();
-      options.body = data.body || options.body;
-      options.icon = data.icon || options.icon;
-      options.badge = data.badge || options.badge;
-      options.vibrate = data.vibrate || options.vibrate;
-      options.data = data.data || options.data;
+      const payload = event.data.json();
+      console.log('[Service Worker] Push payload:', payload);
 
-      event.waitUntil(self.registration.showNotification(data.title || 'Tag Support', options));
+      notificationData = {
+        title: payload.title || notificationData.title,
+        body: payload.body || notificationData.body,
+        icon: payload.icon || notificationData.icon,
+        badge: payload.badge || notificationData.badge,
+        vibrate: payload.vibrate || notificationData.vibrate,
+        data: {
+          ...notificationData.data,
+          ...payload.data,
+          type: payload.type,
+        },
+      };
+
+      // Set URL based on notification type
+      if (payload.type) {
+        switch (payload.type) {
+          case 'game_start':
+          case 'game_end':
+            // Will be set based on user role in notification data
+            notificationData.data.url = payload.data?.url || '/';
+            break;
+          case 'mission_assigned':
+          case 'mission_completed':
+            notificationData.data.url = payload.data?.url || '/';
+            break;
+          case 'capture':
+          case 'rescue':
+            notificationData.data.url = payload.data?.url || '/';
+            break;
+          case 'time_warning':
+          case 'zone_alert':
+            notificationData.data.url = payload.data?.url || '/';
+            break;
+          default:
+            notificationData.data.url = '/';
+        }
+      }
+
+      // Set requireInteraction for important notifications
+      if (
+        payload.type === 'game_start' ||
+        payload.type === 'game_end' ||
+        payload.type === 'capture'
+      ) {
+        notificationData.requireInteraction = true;
+      }
+
+      // Set tag to replace similar notifications
+      if (payload.type) {
+        notificationData.tag = payload.type;
+      }
     } catch (err) {
-      console.error('Error parsing push notification data:', err);
-      event.waitUntil(self.registration.showNotification('Tag Support', options));
+      console.error('[Service Worker] Error parsing push data:', err);
     }
-  } else {
-    event.waitUntil(self.registration.showNotification('Tag Support', options));
   }
+
+  // Show notification
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      vibrate: notificationData.vibrate,
+      data: notificationData.data,
+      tag: notificationData.tag,
+      requireInteraction: notificationData.requireInteraction || false,
+      actions:
+        notificationData.data.type === 'mission_assigned'
+          ? [
+              { action: 'view', title: 'View Mission' },
+              { action: 'close', title: 'Dismiss' },
+            ]
+          : undefined,
+    })
+  );
 });
 
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] Notification clicked:', event);
+
   event.notification.close();
 
-  const urlToOpen = event.notification.data?.url || '/';
+  // Handle notification actions
+  if (event.action === 'close') {
+    return;
+  }
+
+  const urlToOpen = new URL(event.notification.data?.url || '/', self.location.origin).href;
 
   event.waitUntil(
     clients
@@ -100,17 +174,34 @@ self.addEventListener('notificationclick', (event) => {
         includeUncontrolled: true,
       })
       .then((windowClients) => {
-        // Check if there is already a window open
-        for (let i = 0; i < windowClients.length; i++) {
-          const client = windowClients[i];
-          if (client.url === urlToOpen && 'focus' in client) {
-            return client.focus();
+        console.log('[Service Worker] Found window clients:', windowClients.length);
+
+        // Check if there is already a window/tab open with the app
+        for (const client of windowClients) {
+          const clientUrl = new URL(client.url);
+          const targetUrl = new URL(urlToOpen);
+
+          // If the origin matches, focus the existing window and navigate
+          if (clientUrl.origin === targetUrl.origin && 'focus' in client) {
+            console.log('[Service Worker] Focusing existing client:', client.url);
+            return client.focus().then((focusedClient) => {
+              // Navigate to the target URL if needed
+              if (focusedClient.navigate && clientUrl.href !== targetUrl.href) {
+                return focusedClient.navigate(targetUrl.href);
+              }
+              return focusedClient;
+            });
           }
         }
-        // If not, open a new window
+
+        // If no matching window is found, open a new one
+        console.log('[Service Worker] Opening new window:', urlToOpen);
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
+      })
+      .catch((err) => {
+        console.error('[Service Worker] Error handling notification click:', err);
       })
   );
 });
