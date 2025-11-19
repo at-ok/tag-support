@@ -46,8 +46,8 @@ cd tag-support
 npm install
 
 # 環境変数の設定
-cp .env.local.example .env.local
-# .env.localにFirebaseの設定を記入
+cp .env.example .env.local
+# .env.localにSupabaseの設定を記入
 
 # 開発サーバーの起動
 npm run dev
@@ -108,17 +108,21 @@ tag-support/
 ✅ 位置情報トラッキング
 ✅ Leaflet.js地図表示
 ✅ 役職別UI（逃走者・鬼・ゲームマスター）
+✅ ミッションシステム（作成・削除・完了）
+✅ セーフゾーン・立禁エリア管理
+✅ ゲーム状態管理（開始・停止・設定変更）
+✅ 位置履歴記録・リプレイ機能
+✅ ゲーム統計・分析機能
 ✅ PWA設定・オフライン対応基礎
 ✅ CI/CD (GitHub Actions)
 ✅ テスト環境 (Vitest + Playwright)
 
 ## 今後の実装予定
 
-- [ ] Push通知機能
-- [ ] ミッションシステム
-- [ ] セーフゾーン・立禁エリア
-- [ ] ゲーム状態管理
-- [ ] リプレイ機能
+- [ ] Push通知機能（Web Push API）
+- [ ] マルチゲームマスター対応
+- [ ] データベーススキーマの実環境デプロイ
+- [ ] 特殊役職システム
 
 ## 開発コマンド
 

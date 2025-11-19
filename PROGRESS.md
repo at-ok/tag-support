@@ -15,8 +15,8 @@
   - ESLint無効、Turbopack有効
   - PWA対応準備
 
-- [x] **Firebase統合**
-  - Firebase SDK導入 (Auth/Firestore/Functions/FCM)
+- [x] **Supabase統合**
+  - Supabase SDK導入 (Auth/Database/Realtime)
   - 環境変数設定 (.env.local)
   - 初期化コード作成
 
@@ -26,7 +26,7 @@
   - 拡張性を考慮した設計
 
 - [x] **認証システム**
-  - Firebase Anonymous Authentication
+  - Supabase Anonymous Authentication
   - useAuth カスタムフック
   - AuthProvider Context
   - ニックネーム・役職・チーム登録
@@ -34,7 +34,7 @@
 - [x] **位置情報システム**
   - Geolocation API統合
   - useLocation カスタムフック
-  - Firestore自動同期
+  - Supabase自動同期
   - 調整可能な更新間隔
 
 - [x] **地図システム**
@@ -69,14 +69,14 @@
 
 - **フロントエンド**: React Server Components + Client Components適切な分離
 - **状態管理**: React Context + Custom Hooks パターン
-- **データベース**: Firestore リアルタイムリスナー活用
+- **データベース**: Supabase (PostgreSQL + PostGIS) リアルタイムリスナー活用
 - **地図**: Dynamic Import による SSR対応
 
 ### パフォーマンス
 
 - Leafletマーカー画像の事前配置
 - 地図コンポーネントの動的読み込み
-- Firebase接続の最適化
+- Supabase接続の最適化
 - CI/CDビルドプロセスの最適化（外部依存削減） ⭐️ NEW
 
 ### 設計原則
@@ -119,7 +119,7 @@
 - [x] **開発環境の改善**
   - ESLintルールの調整（error → warn）により開発ワークフロー改善
   - Supabase環境変数のフォールバック機能実装
-  - Firebase初期化の型安全性向上
+  - Supabase初期化の型安全性向上
 
 - [x] **テスト品質の維持**
   - 全61テストの成功維持
@@ -157,13 +157,14 @@
 
 ### 未実装機能
 
-- [ ] Push通知システム
-- [ ] マルチゲームマスター対応
-- [ ] データベーススキーマの作成（location_historyテーブル等）
+- [ ] Push通知システム（Web Push API統合）
+- [ ] マルチゲームマスター対応（複数GM同時運営）
+- [ ] データベーススキーマの実環境デプロイ（location_historyテーブル等）
+- [ ] 特殊役職システム（データモデルは準備済み）
 
 ### 技術的制約
 
-- Firebase設定が必要（.env.local）
+- Supabase設定が必要（.env.local）
 - 位置情報許可が必須
 - オンライン環境での動作前提
 
@@ -172,7 +173,6 @@
 ```
 tag-support/ (25ファイル作成) ⭐️ 更新
 ├── lib/
-│   ├── firebase.ts           # Firebase設定
 │   └── supabase.ts           # Supabase設定
 ├── types/index.ts           # 型定義
 ├── hooks/
@@ -208,14 +208,14 @@ tag-support/ (25ファイル作成) ⭐️ 更新
 - [x] **ユニットテスト (Vitest)** - 70/70テスト成功（100%） ⭐️ 更新
   - lib/supabase.ts: 4/4テスト成功（環境変数フォールバック対応）
   - hooks/useLocation.ts: 8/8テスト成功
-  - hooks/useAuth.tsx: 9/9テスト成功 (Supabaseベースに修正)
-  - hooks/useGame.tsx: 10/10テスト成功 (Supabaseベースに修正)
-  - hooks/useMissions.tsx: 13/13テスト成功 (Supabaseベースに修正)
+  - hooks/useAuth.tsx: 9/9テスト成功 (Supabaseベース)
+  - hooks/useGame.tsx: 10/10テスト成功 (Supabaseベース)
+  - hooks/useMissions.tsx: 13/13テスト成功 (Supabaseベース)
   - hooks/useCapture.tsx: 8/8テスト成功
   - hooks/useZones.tsx: 9/9テスト成功（フィールド名修正対応）
   - hooks/useLocationHistory.tsx: 9/9テスト成功 ⭐️ NEW
 - [x] **テスト品質向上** ⭐️ NEW
-  - Firebase → Supabase への完全移行完了
+  - Supabase統合完了
   - 全テストがSupabaseのモックを使用
   - テストカバレッジ維持（高品質コード保証）
 - [x] **E2Eテスト (Playwright)**
@@ -233,7 +233,7 @@ tag-support/ (25ファイル作成) ⭐️ 更新
 - [x] ローカル開発環境起動
 - [x] ビルドプロセス（npm run build成功）
 - [x] 全テストスイート実行（70/70成功） ⭐️ 更新
-- [ ] Firebase接続テスト
+- [ ] Supabase接続テスト（実環境）
 - [ ] 認証フロー
 - [ ] 位置情報取得
 - [ ] 地図表示
