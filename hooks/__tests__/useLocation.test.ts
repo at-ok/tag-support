@@ -2,15 +2,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useLocation } from '../useLocation';
 import { useAuth } from '../useAuth';
+import { useGame } from '../useGame';
 
 // Mock the dependencies
 vi.mock('../useAuth');
-vi.mock('@/lib/firebase', () => ({
-  db: {},
-}));
-vi.mock('firebase/firestore', () => ({
-  doc: vi.fn(),
-  updateDoc: vi.fn(),
+vi.mock('../useGame');
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      insert: vi.fn(() => ({ error: null })),
+      update: vi.fn(() => ({ error: null })),
+      eq: vi.fn(() => ({ error: null })),
+    })),
+  },
 }));
 
 describe('useLocation', () => {
@@ -45,6 +49,31 @@ describe('useLocation', () => {
       error: null,
       signIn: vi.fn(),
       signOut: vi.fn(),
+    });
+
+    // Mock useGame hook
+    vi.mocked(useGame).mockReturnValue({
+      game: {
+        id: 'test-game-id',
+        status: 'active',
+        duration: 60,
+        settings: {
+          locationUpdateInterval: 30000,
+          locationAccuracy: 10,
+          safeZones: [],
+          restrictedZones: [],
+        },
+        players: [],
+        missions: [],
+      },
+      loading: false,
+      error: null,
+      createGame: vi.fn(),
+      startGame: vi.fn(),
+      pauseGame: vi.fn(),
+      resumeGame: vi.fn(),
+      endGame: vi.fn(),
+      updateSettings: vi.fn(),
     });
   });
 
