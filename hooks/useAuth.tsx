@@ -93,9 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         status: 'active',
       };
 
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert(insertPayload as never);
+      const { error: insertError } = await supabase.from('users').insert(insertPayload as never);
 
       if (insertError) throw insertError;
 

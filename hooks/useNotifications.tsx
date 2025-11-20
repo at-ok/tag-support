@@ -114,7 +114,7 @@ export function useNotifications(): UseNotificationsReturn {
         // Subscribe to push notifications
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
+          applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
         });
 
         // Send subscription to server
@@ -148,55 +148,51 @@ export function useNotifications(): UseNotificationsReturn {
   );
 
   // Unsubscribe from push notifications
-  const unsubscribeFromPush = useCallback(
-    async (userId: string): Promise<boolean> => {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        setError('Push notifications are not supported');
-        return false;
+  const unsubscribeFromPush = useCallback(async (userId: string): Promise<boolean> => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setError('Push notifications are not supported');
+      return false;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        setIsSubscribed(false);
+        return true;
       }
 
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
+      // Unsubscribe from push manager
+      const unsubscribed = await subscription.unsubscribe();
 
-        if (!subscription) {
-          setIsSubscribed(false);
-          return true;
-        }
+      if (unsubscribed) {
+        // Remove subscription from server
+        await fetch('/api/push/unsubscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            endpoint: subscription.endpoint,
+          }),
+        });
 
-        // Unsubscribe from push manager
-        const unsubscribed = await subscription.unsubscribe();
-
-        if (unsubscribed) {
-          // Remove subscription from server
-          await fetch('/api/push/unsubscribe', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              userId,
-              endpoint: subscription.endpoint,
-            }),
-          });
-
-          setIsSubscribed(false);
-          setError(null);
-          console.log('Successfully unsubscribed from push notifications');
-          return true;
-        }
-
-        return false;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to unsubscribe from push';
-        setError(errorMessage);
-        console.error('Error unsubscribing from push notifications:', err);
-        return false;
+        setIsSubscribed(false);
+        setError(null);
+        console.log('Successfully unsubscribed from push notifications');
+        return true;
       }
-    },
-    []
-  );
+
+      return false;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to unsubscribe from push';
+      setError(errorMessage);
+      console.error('Error unsubscribing from push notifications:', err);
+      return false;
+    }
+  }, []);
 
   // Send a notification
   const sendNotification = useCallback(
@@ -225,7 +221,7 @@ export function useNotifications(): UseNotificationsReturn {
               vibrate: options.vibrate || getDefaultVibration(type),
               silent: options.silent || false,
               requireInteraction: type === 'game_start' || type === 'game_end',
-            });
+            } as unknown as NotificationOptions & { vibrate?: number[] });
           } else {
             // Fallback to regular notification
             new Notification(options.title, {
@@ -235,7 +231,7 @@ export function useNotifications(): UseNotificationsReturn {
               data: { ...options.data, type },
               vibrate: options.vibrate || getDefaultVibration(type),
               silent: options.silent || false,
-            });
+            } as unknown as NotificationOptions & { vibrate?: number[] });
           }
         } else {
           // Fallback to regular notification if service worker is not available
@@ -246,7 +242,7 @@ export function useNotifications(): UseNotificationsReturn {
             data: { ...options.data, type },
             vibrate: options.vibrate || getDefaultVibration(type),
             silent: options.silent || false,
-          });
+          } as unknown as NotificationOptions & { vibrate?: number[] });
         }
 
         setError(null);

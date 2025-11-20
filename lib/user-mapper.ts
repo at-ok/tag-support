@@ -26,12 +26,7 @@ export function mapDatabaseUserToAppUser(row: DatabaseUserRow): User {
     nickname: row.nickname,
     role: row.role as User['role'],
     team: row.team_id || undefined,
-    status:
-      row.status === 'captured'
-        ? 'captured'
-        : row.status === 'offline'
-          ? 'safe'
-          : 'active',
+    status: row.status === 'captured' ? 'captured' : row.status === 'offline' ? 'safe' : 'active',
     lastUpdated: new Date(row.updated_at),
     captureCount: row.capture_count || 0,
   };

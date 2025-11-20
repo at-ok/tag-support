@@ -14,10 +14,7 @@ export interface GeoLocation {
  * @param pos2 終了位置
  * @returns 距離（メートル）
  */
-export function calculateDistance(
-  pos1: GeoLocation,
-  pos2: GeoLocation
-): number {
+export function calculateDistance(pos1: GeoLocation, pos2: GeoLocation): number {
   const R = 6371e3; // Earth's radius in meters
   const φ1 = (pos1.lat * Math.PI) / 180;
   const φ2 = (pos2.lat * Math.PI) / 180;
@@ -53,18 +50,13 @@ export function calculateSpeed(
  * @param current 現在の位置
  * @returns 方向角（度、北を0度として時計回り）
  */
-export function calculateHeading(
-  prev: GeoLocation,
-  current: GeoLocation
-): number {
+export function calculateHeading(prev: GeoLocation, current: GeoLocation): number {
   const φ1 = (prev.lat * Math.PI) / 180;
   const φ2 = (current.lat * Math.PI) / 180;
   const Δλ = ((current.lng - prev.lng) * Math.PI) / 180;
 
   const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x =
-    Math.cos(φ1) * Math.sin(φ2) -
-    Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   const θ = Math.atan2(y, x);
 
   return ((θ * 180) / Math.PI + 360) % 360;

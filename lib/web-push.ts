@@ -44,13 +44,9 @@ export async function sendPushNotification(
   }
 
   try {
-    await webpush.sendNotification(
-      subscription,
-      JSON.stringify(payload),
-      {
-        TTL: 60 * 60 * 24, // 24 hours
-      }
-    );
+    await webpush.sendNotification(subscription, JSON.stringify(payload), {
+      TTL: 60 * 60 * 24, // 24 hours
+    });
   } catch (error) {
     console.error('Error sending push notification:', error);
     throw error;
@@ -63,7 +59,11 @@ export async function sendPushNotification(
 export async function sendPushNotificationBatch(
   subscriptions: PushSubscription[],
   payload: PushNotificationPayload
-): Promise<{ success: number; failed: number; errors: Array<{ subscription: PushSubscription; error: unknown }> }> {
+): Promise<{
+  success: number;
+  failed: number;
+  errors: Array<{ subscription: PushSubscription; error: unknown }>;
+}> {
   const results = await Promise.allSettled(
     subscriptions.map((subscription) => sendPushNotification(subscription, payload))
   );
@@ -74,8 +74,8 @@ export async function sendPushNotificationBatch(
     .map((r, i) => ({ result: r, subscription: subscriptions[i] }))
     .filter(({ result }) => result.status === 'rejected')
     .map(({ result, subscription }) => ({
-      subscription,
-      error: (result as PromiseRejectedResult).reason,
+      subscription: subscription!,
+      error: (result as PromiseRejectedResult).reason as unknown,
     }));
 
   return { success, failed, errors };

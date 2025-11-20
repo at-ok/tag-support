@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
 import { sendPushNotificationBatch, type PushNotificationPayload } from '@/lib/web-push';
 
+interface SubscriptionRow {
+  endpoint: string;
+  p256dh_key: string;
+  auth_key: string;
+  user_id: string;
+  users: {
+    role?: string;
+  } | null;
+}
+
 /**
  * POST /api/push/send
  * Send push notifications to users
@@ -28,17 +38,11 @@ export async function POST(request: NextRequest) {
 
     // Validate payload
     if (!payload || typeof payload !== 'object') {
-      return NextResponse.json(
-        { error: 'Payload is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Payload is required' }, { status: 400 });
     }
 
     if (!payload.title || !payload.body) {
-      return NextResponse.json(
-        { error: 'Payload must include title and body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Payload must include title and body' }, { status: 400 });
     }
 
     // Create Supabase client
@@ -51,10 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (userIds !== 'all') {
       if (!Array.isArray(userIds) || userIds.length === 0) {
-        return NextResponse.json(
-          { error: 'userIds must be an array or "all"' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'userIds must be an array or "all"' }, { status: 400 });
       }
       query = query.in('user_id', userIds);
     }
@@ -63,10 +64,7 @@ export async function POST(request: NextRequest) {
 
     if (fetchError) {
       console.error('Error fetching subscriptions:', fetchError);
-      return NextResponse.json(
-        { error: 'Failed to fetch subscriptions' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to fetch subscriptions' }, { status: 500 });
     }
 
     if (!subscriptions || subscriptions.length === 0) {
@@ -78,10 +76,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter by roles if specified
-    let filteredSubscriptions = subscriptions;
+    let filteredSubscriptions: SubscriptionRow[] = subscriptions as SubscriptionRow[];
     if (roles && Array.isArray(roles) && roles.length > 0) {
-      filteredSubscriptions = subscriptions.filter((sub) => {
-        const userRole = (sub.users as { role?: string })?.role;
+      filteredSubscriptions = filteredSubscriptions.filter((sub: SubscriptionRow) => {
+        const userRole = sub.users?.role;
         return userRole && roles.includes(userRole);
       });
     }
@@ -95,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert to push subscription format
-    const pushSubscriptions = filteredSubscriptions.map((sub) => ({
+    const pushSubscriptions = filteredSubscriptions.map((sub: SubscriptionRow) => ({
       endpoint: sub.endpoint,
       keys: {
         p256dh: sub.p256dh_key,
@@ -139,9 +137,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in send route:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -12,17 +12,11 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     if (!userId || typeof userId !== 'string') {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
     if (!endpoint || typeof endpoint !== 'string') {
-      return NextResponse.json(
-        { error: 'Endpoint is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Endpoint is required' }, { status: 400 });
     }
 
     // Create Supabase client
@@ -37,10 +31,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error deleting subscription:', error);
-      return NextResponse.json(
-        { error: 'Failed to delete subscription' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to delete subscription' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -49,9 +40,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in unsubscribe route:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

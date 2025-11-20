@@ -71,9 +71,8 @@ describe('useLocation', () => {
       createGame: vi.fn(),
       startGame: vi.fn(),
       pauseGame: vi.fn(),
-      resumeGame: vi.fn(),
       endGame: vi.fn(),
-      updateSettings: vi.fn(),
+      updateGameSettings: vi.fn(),
     });
   });
 

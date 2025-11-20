@@ -136,11 +136,7 @@ export function useLocation(
     );
 
     setWatchId(id);
-  }, [
-    updateInterval,
-    updateLocationInDatabase,
-    previousLocation,
-  ]);
+  }, [updateInterval, updateLocationInDatabase, previousLocation]);
 
   const stopTracking = useCallback(() => {
     if (watchId !== null) {
