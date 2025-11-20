@@ -8,6 +8,8 @@ import { useGame } from '@/hooks/useGame';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@/types';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { calculateDistance } from '@/lib/geometry';
+import { mapDatabaseUsersToAppUsers } from '@/lib/user-mapper';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
@@ -36,14 +38,7 @@ export default function ChaserPage() {
       }
 
       if (data) {
-        const mappedRunners: User[] = data.map((u: Record<string, unknown>) => ({
-          id: u.id as string,
-          nickname: u.nickname as string,
-          role: u.role as 'runner' | 'chaser' | 'gamemaster' | 'special',
-          team: (u.team_id as string | null) || undefined,
-          status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
-          lastUpdated: new Date(u.updated_at as string),
-        }));
+        const mappedRunners = mapDatabaseUsersToAppUsers(data);
         setAllRunners(mappedRunners);
 
         if (location) {
@@ -89,24 +84,6 @@ export default function ChaserPage() {
       startTracking();
     }
   }, [isTracking, startTracking]);
-
-  const calculateDistance = (
-    pos1: { lat: number; lng: number },
-    pos2: { lat: number; lng: number }
-  ) => {
-    const R = 6371e3;
-    const φ1 = (pos1.lat * Math.PI) / 180;
-    const φ2 = (pos2.lat * Math.PI) / 180;
-    const Δφ = ((pos2.lat - pos1.lat) * Math.PI) / 180;
-    const Δλ = ((pos2.lng - pos1.lng) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  };
 
   const captureRunner = async (runnerId: string) => {
     if (!user) return;

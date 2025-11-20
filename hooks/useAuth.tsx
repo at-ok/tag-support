@@ -4,6 +4,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { User, UserRole } from '@/types';
+import { mapDatabaseUserToAppUser } from '@/lib/user-mapper';
 
 interface AuthContextType {
   session: Session | null;
@@ -56,17 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (data) {
-        const row = data as any;
-        setUser({
-          id: row.id,
-          nickname: row.nickname,
-          role: row.role as UserRole,
-          team: row.team_id || undefined,
-          status:
-            row.status === 'captured' ? 'captured' : row.status === 'offline' ? 'safe' : 'active',
-          lastUpdated: new Date(row.updated_at),
-          captureCount: 0,
-        });
+        setUser(mapDatabaseUserToAppUser(data));
       }
     } catch (err) {
       console.error('Error loading user data:', err);
@@ -94,13 +85,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!authData.user) throw new Error('No user returned from sign up');
 
       // Create user record
-      const { error: insertError } = await supabase.from('users').insert({
+      const insertPayload: Record<string, unknown> = {
         id: authData.user.id,
         nickname,
         role: role === 'special' ? 'gamemaster' : role,
         team_id: team || null,
         status: 'active',
-      } as any);
+      };
+
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert(insertPayload as never);
 
       if (insertError) throw insertError;
 

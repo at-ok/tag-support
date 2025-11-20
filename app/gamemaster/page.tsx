@@ -7,6 +7,7 @@ import { useGame } from '@/hooks/useGame';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@/types';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { mapDatabaseUsersToAppUsers } from '@/lib/user-mapper';
 import GameControls from '@/components/GameControls';
 import MissionManager from '@/components/MissionManager';
 import ZoneManager from '@/components/ZoneManager';
@@ -39,16 +40,7 @@ export default function GamemasterPage() {
       }
 
       if (data) {
-        const mappedPlayers: User[] = data.map((u: Record<string, unknown>) => ({
-          id: u.id as string,
-          nickname: u.nickname as string,
-          role: u.role as 'runner' | 'chaser' | 'gamemaster' | 'special',
-          team: (u.team_id as string | null) || undefined,
-          status: u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
-          lastUpdated: new Date(u.updated_at as string),
-          captureCount: 0,
-        }));
-        setAllPlayers(mappedPlayers);
+        setAllPlayers(mapDatabaseUsersToAppUsers(data));
       }
     };
 
@@ -132,11 +124,9 @@ export default function GamemasterPage() {
   const activePlayers = allPlayers.filter((p) => p.status === 'active');
   const capturedPlayers = allPlayers.filter((p) => p.status === 'captured');
 
-  const mapCenter: [number, number] = allPlayers.find((p) => p.location)
-    ? [
-        allPlayers.find((p) => p.location)!.location!.lat,
-        allPlayers.find((p) => p.location)!.location!.lng,
-      ]
+  const playerWithLocation = allPlayers.find((p) => p.location);
+  const mapCenter: [number, number] = playerWithLocation?.location
+    ? [playerWithLocation.location.lat, playerWithLocation.location.lng]
     : [35.5522, 139.7797];
 
   return (

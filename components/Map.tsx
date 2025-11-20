@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import type { User, Zone } from '@/types';
@@ -27,7 +28,7 @@ export default function Map({
   visibleUsers = [],
   zones = [],
 }: MapProps) {
-  const getMarkerIcon = (role: string) => {
+  const getMarkerIcon = useCallback((role: string) => {
     const color = role === 'chaser' ? 'red' : role === 'runner' ? 'blue' : 'green';
     return L.divIcon({
       className: 'custom-marker',
@@ -42,7 +43,7 @@ export default function Map({
       iconSize: [24, 24],
       iconAnchor: [12, 12],
     });
-  };
+  }, []);
 
   return (
     <MapContainer
