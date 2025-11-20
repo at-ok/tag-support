@@ -13,17 +13,11 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     if (!userId || typeof userId !== 'string') {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
     if (!validatePushSubscription(subscription)) {
-      return NextResponse.json(
-        { error: 'Invalid subscription object' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid subscription object' }, { status: 400 });
     }
 
     // Create Supabase client
@@ -37,24 +31,23 @@ export async function POST(request: NextRequest) {
       .eq('endpoint', subscription.endpoint)
       .single();
 
-    if (existingSubscription) {
+    if (existingSubscription && 'id' in existingSubscription) {
       // Update existing subscription
+      const updatePayload: Record<string, unknown> = {
+        p256dh_key: subscription.keys.p256dh,
+        auth_key: subscription.keys.auth,
+        user_agent: request.headers.get('user-agent'),
+        updated_at: new Date().toISOString(),
+      };
+
       const { error: updateError } = await supabase
         .from('push_subscriptions')
-        .update({
-          p256dh_key: subscription.keys.p256dh,
-          auth_key: subscription.keys.auth,
-          user_agent: request.headers.get('user-agent'),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', existingSubscription.id);
+        .update(updatePayload as never)
+        .eq('id', (existingSubscription as Record<string, unknown>).id as string);
 
       if (updateError) {
         console.error('Error updating subscription:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update subscription' },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
       }
 
       return NextResponse.json({
@@ -64,22 +57,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new subscription
+    const insertPayload: Record<string, unknown> = {
+      user_id: userId,
+      endpoint: subscription.endpoint,
+      p256dh_key: subscription.keys.p256dh,
+      auth_key: subscription.keys.auth,
+      user_agent: request.headers.get('user-agent'),
+    };
+
     const { error: insertError } = await supabase
       .from('push_subscriptions')
-      .insert({
-        user_id: userId,
-        endpoint: subscription.endpoint,
-        p256dh_key: subscription.keys.p256dh,
-        auth_key: subscription.keys.auth,
-        user_agent: request.headers.get('user-agent'),
-      });
+      .insert(insertPayload as never);
 
     if (insertError) {
       console.error('Error inserting subscription:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to save subscription' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -88,9 +80,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in subscribe route:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

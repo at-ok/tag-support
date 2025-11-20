@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useLocationHistory } from '../useLocationHistory';
 import { supabase } from '@/lib/supabase';
+import { calculateDistance } from '@/lib/geometry';
 
 // Mock Supabase
 vi.mock('@/lib/supabase', () => ({
@@ -64,9 +65,7 @@ describe('useLocationHistory', () => {
   });
 
   it('should calculate distance between two points', () => {
-    const { result } = renderHook(() => useLocationHistory());
-
-    const distance = result.current.calculateDistance(
+    const distance = calculateDistance(
       { lat: 35.6895, lng: 139.6917, timestamp: new Date() },
       { lat: 35.6896, lng: 139.6918, timestamp: new Date() }
     );

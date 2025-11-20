@@ -119,12 +119,12 @@ export default function GamemasterPage() {
     );
   }
 
-  const runners = allPlayers.filter((p) => p.role === 'runner');
-  const chasers = allPlayers.filter((p) => p.role === 'chaser');
-  const activePlayers = allPlayers.filter((p) => p.status === 'active');
-  const capturedPlayers = allPlayers.filter((p) => p.status === 'captured');
+  const runners = allPlayers.filter((p: User) => p.role === 'runner');
+  const chasers = allPlayers.filter((p: User) => p.role === 'chaser');
+  const activePlayers = allPlayers.filter((p: User) => p.status === 'active');
+  const capturedPlayers = allPlayers.filter((p: User) => p.status === 'captured');
 
-  const playerWithLocation = allPlayers.find((p) => p.location);
+  const playerWithLocation = allPlayers.find((p: User) => p.location);
   const mapCenter: [number, number] = playerWithLocation?.location
     ? [playerWithLocation.location.lat, playerWithLocation.location.lng]
     : [35.5522, 139.7797];
@@ -150,14 +150,15 @@ export default function GamemasterPage() {
                 <p className="font-semibold">🏃 逃走者</p>
                 <p>合計 {runners.length}人</p>
                 <p className="text-green-600">
-                  逃走中 {runners.filter((r) => r.status === 'active').length}人
+                  逃走中 {runners.filter((r: User) => r.status === 'active').length}人
                 </p>
               </div>
               <div className="rounded bg-red-50 p-2">
                 <p className="font-semibold">👹 鬼</p>
                 <p>合計 {chasers.length}人</p>
                 <p className="text-blue-600">
-                  捕獲数 {chasers.reduce((sum, c) => sum + (c.captureCount || 0), 0)}人
+                  捕獲数 {chasers.reduce((sum: number, c: User) => sum + (c.captureCount || 0), 0)}
+                  人
                 </p>
               </div>
             </div>
