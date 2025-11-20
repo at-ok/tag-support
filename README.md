@@ -70,18 +70,33 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 tag-support/
 ├── app/                    # Next.js App Router
+│   ├── api/               # API Routes
+│   │   └── push/         # プッシュ通知API
 │   ├── runner/            # 逃走者UI
 │   ├── chaser/            # 鬼UI
 │   └── gamemaster/        # ゲームマスターUI
 ├── components/            # 共通コンポーネント
-│   └── Map.tsx           # 地図コンポーネント
+│   ├── Map.tsx           # 地図コンポーネント
+│   ├── GameControls.tsx  # ゲーム制御UI
+│   ├── MissionManager.tsx# ミッション管理UI
+│   └── GameStats.tsx     # 統計表示
 ├── hooks/                # カスタムフック
-│   ├── useAuth.ts        # 認証フック
-│   └── useLocation.ts    # 位置情報フック
-├── lib/                  # ライブラリ設定
-│   └── supabase.ts       # Supabase初期化
+│   ├── useAuth.tsx       # 認証フック
+│   ├── useLocation.ts    # 位置情報フック
+│   ├── useGame.tsx       # ゲーム状態管理
+│   ├── useMissions.tsx   # ミッション管理
+│   └── useLocationHistory.tsx # 位置履歴
+├── lib/                  # ユーティリティライブラリ
+│   ├── supabase.ts       # Supabase初期化
+│   ├── geometry.ts       # 地理計算関数（距離・速度・方向）
+│   ├── user-mapper.ts    # DBユーザー型変換
+│   └── web-push.ts       # Web Push設定
+├── constants/            # 定数定義
+│   ├── ui-labels.ts      # UIラベル定数
+│   └── game-config.ts    # ゲーム設定定数
 ├── types/                # TypeScript型定義
-│   └── index.ts          # メイン型定義
+│   ├── index.ts          # メイン型定義
+│   └── database.ts       # Supabase型定義
 └── public/               # 静的ファイル
     ├── manifest.json     # PWAマニフェスト
     └── sw.js            # Service Worker
@@ -118,6 +133,7 @@ tag-support/
 ✅ PWA設定・オフライン対応基礎
 ✅ CI/CD (GitHub Actions)
 ✅ テスト環境 (Vitest + Playwright)
+✅ **コード品質改善（リファクタリング完了）** ⭐️ NEW
 
 ## 今後の実装予定
 

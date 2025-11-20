@@ -8,6 +8,7 @@ import { useGame } from '@/hooks/useGame';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@/types';
 import MissionManager from '@/components/MissionManager';
+import { mapDatabaseUsersToAppUsers } from '@/lib/user-mapper';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
@@ -39,25 +40,7 @@ export default function RunnerPage() {
       }
 
       if (data) {
-        const mappedUsers: User[] = data.map(
-          (u: {
-            id: string;
-            nickname: string;
-            role: string;
-            team_id: string | null;
-            status: string;
-            updated_at: string;
-          }) => ({
-            id: u.id,
-            nickname: u.nickname,
-            role: u.role as 'runner' | 'chaser' | 'gamemaster',
-            team: u.team_id || undefined,
-            status:
-              u.status === 'captured' ? 'captured' : u.status === 'offline' ? 'safe' : 'active',
-            lastUpdated: new Date(u.updated_at),
-          })
-        );
-        setTeammates(mappedUsers);
+        setTeammates(mapDatabaseUsersToAppUsers(data));
       }
     };
 

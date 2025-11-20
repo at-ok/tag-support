@@ -119,10 +119,15 @@ export async function POST(request: NextRequest) {
         .map((err) => err.subscription.endpoint);
 
       if (invalidEndpoints.length > 0) {
-        await supabase
+        const { error: deleteError } = await supabase
           .from('push_subscriptions')
           .delete()
           .in('endpoint', invalidEndpoints);
+
+        if (deleteError) {
+          console.error('Failed to clean up invalid subscriptions:', deleteError);
+          // 削除失敗はログに記録するが、通知送信の成功には影響しない
+        }
       }
     }
 

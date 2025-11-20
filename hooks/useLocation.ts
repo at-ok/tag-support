@@ -5,6 +5,7 @@ import type { Location } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 import { useGame } from './useGame';
+import { calculateSpeed as calcSpeed, calculateHeading as calcHeading } from '@/lib/geometry';
 
 interface UseLocationReturn {
   location: Location | null;
@@ -30,38 +31,6 @@ export function useLocation(
   const [isTracking, setIsTracking] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [previousLocation, setPreviousLocation] = useState<Location | null>(null);
-
-  // Calculate speed between two locations
-  const calculateSpeed = useCallback((prev: Location, current: Location): number => {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = (prev.lat * Math.PI) / 180;
-    const φ2 = (current.lat * Math.PI) / 180;
-    const Δφ = ((current.lat - prev.lat) * Math.PI) / 180;
-    const Δλ = ((current.lng - prev.lng) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const distance = R * c; // Distance in meters
-    const timeDiff = (current.timestamp.getTime() - prev.timestamp.getTime()) / 1000; // Time in seconds
-
-    return timeDiff > 0 ? distance / timeDiff : 0; // Speed in meters per second
-  }, []);
-
-  // Calculate heading between two locations
-  const calculateHeading = useCallback((prev: Location, current: Location): number => {
-    const φ1 = (prev.lat * Math.PI) / 180;
-    const φ2 = (current.lat * Math.PI) / 180;
-    const Δλ = ((current.lng - prev.lng) * Math.PI) / 180;
-
-    const y = Math.sin(Δλ) * Math.cos(φ2);
-    const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-    const θ = Math.atan2(y, x);
-
-    return ((θ * 180) / Math.PI + 360) % 360; // Heading in degrees (0-360)
-  }, []);
 
   const updateLocationInDatabase = useCallback(
     async (loc: Location, speed?: number, heading?: number) => {
@@ -102,6 +71,8 @@ export function useLocation(
 
           if (historyError) {
             console.error('Failed to insert location history:', historyError);
+            // 履歴の記録失敗は続行可能なエラーとして扱う
+            // 重要な位置情報の更新は引き続き実行される
           }
         }
 
@@ -115,6 +86,8 @@ export function useLocation(
         if (updateError) throw updateError;
       } catch (err) {
         console.error('Failed to update location:', err);
+        // 位置情報の更新に失敗した場合、エラー状態を設定
+        setError(err instanceof Error ? err.message : 'Failed to update location');
       }
     },
     [user, game, enableHistory]
@@ -143,8 +116,8 @@ export function useLocation(
         let heading: number | undefined;
 
         if (previousLocation) {
-          speed = calculateSpeed(previousLocation, newLocation);
-          heading = calculateHeading(previousLocation, newLocation);
+          speed = calcSpeed(previousLocation, newLocation);
+          heading = calcHeading(previousLocation, newLocation);
         }
 
         setLocation(newLocation);
@@ -167,8 +140,6 @@ export function useLocation(
     updateInterval,
     updateLocationInDatabase,
     previousLocation,
-    calculateSpeed,
-    calculateHeading,
   ]);
 
   const stopTracking = useCallback(() => {

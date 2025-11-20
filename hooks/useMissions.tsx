@@ -6,6 +6,7 @@ import type { Mission, Location } from '@/types';
 import { useAuth } from './useAuth';
 import { useLocation } from './useLocation';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { calculateDistance } from '@/lib/geometry';
 
 interface MissionContextType {
   missions: Mission[];
@@ -198,21 +199,6 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
       setError(err instanceof Error ? err.message : 'Failed to complete mission');
       throw err;
     }
-  };
-
-  const calculateDistance = (pos1: Location, pos2: Location) => {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = (pos1.lat * Math.PI) / 180;
-    const φ2 = (pos2.lat * Math.PI) / 180;
-    const Δφ = ((pos2.lat - pos1.lat) * Math.PI) / 180;
-    const Δλ = ((pos2.lng - pos1.lng) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c; // Distance in meters
   };
 
   const checkMissionProgress = () => {
