@@ -33,7 +33,7 @@
 ### 前提条件
 
 - Node.js 18以上
-- npm または yarn
+- pnpm 9.12.3以上
 
 ### インストール
 
@@ -43,14 +43,14 @@ git clone <repository-url>
 cd tag-support
 
 # 依存関係のインストール
-npm install
+pnpm install
 
 # 環境変数の設定
 cp .env.example .env.local
 # .env.localにSupabaseの設定を記入
 
 # 開発サーバーの起動
-npm run dev
+pnpm dev
 ```
 
 ### Supabase設定
@@ -146,30 +146,30 @@ tag-support/
 
 ```bash
 # 開発サーバー起動
-npm run dev
+pnpm dev
 
 # ビルド
-npm run build
+pnpm build
 
 # 本番環境確認
-npm run start
+pnpm start
 
 # 型チェック
-npm run type-check
+pnpm type-check
 
 # テスト
-npm run test              # ユニットテスト (Vitest)
-npm run test:ui           # ユニットテスト UI
-npm run test:e2e          # E2Eテスト (Playwright)
-npm run test:e2e:ui       # E2Eテスト UI
+pnpm test              # ユニットテスト (Vitest)
+pnpm test:ui           # ユニットテスト UI
+pnpm test:e2e          # E2Eテスト (Playwright)
+pnpm test:e2e:ui       # E2Eテスト UI
 
 # テストカバレッジ
-npm test -- --coverage    # カバレッジレポート生成
+pnpm test -- --coverage    # カバレッジレポート生成
 
 # コード品質
-npm run lint              # ESLint
-npm run format            # Prettier フォーマット
-npm run format:check      # フォーマットチェック
+pnpm lint              # ESLint
+pnpm format            # Prettier フォーマット
+pnpm format:check      # フォーマットチェック
 ```
 
 ## テスト状況
